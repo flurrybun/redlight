@@ -57,7 +57,7 @@
 	{:else if gallery.error}
 		<p>Error: {gallery.error.kind}</p>
 	{:else if gallery.currentPost}
-		<img src={gallery.currentPost.fileUrl} referrerpolicy="no-referrer" alt="hentai" />
+		<img src={gallery.currentPost.file?.url} referrerpolicy="no-referrer" alt="hentai" />
 		<p>
 			{gallery.progress.current} / {gallery.progress.loaded}{gallery.progress.hasMore ? "+" : ""}
 		</p>

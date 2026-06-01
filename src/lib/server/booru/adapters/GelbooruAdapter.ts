@@ -1,9 +1,10 @@
 import { GELBOORU_API_KEY, GELBOORU_USER_ID } from "$env/static/private";
+import { getFileType } from "$lib/utils/media";
 import { type ResultAsync } from "neverthrow";
 import { BooruAdapter } from "../BooruAdapter";
 import type { BooruError, BooruPost, SearchOptions, SearchResult } from "../types";
 
-interface GelbooruRawPost {
+interface GelbooruPost {
 	id: number;
 	created_at: string;
 	score: number;
@@ -29,7 +30,7 @@ interface GelbooruRawPost {
 	sample_url: string;
 	sample_height: number;
 	sample_width: number;
-	status: "active" | "deleted" | "pending"; // TODO is this correct
+	status: string;
 	post_locked: 0 | 1;
 	has_children: "true" | "false";
 }
@@ -40,7 +41,7 @@ interface GelbooruResponse {
 		offset: number;
 		count: number;
 	};
-	post: GelbooruRawPost[] | GelbooruRawPost | undefined;
+	post: GelbooruPost[] | GelbooruPost | undefined;
 }
 
 export class GelbooruAdapter extends BooruAdapter {
@@ -77,34 +78,41 @@ export class GelbooruAdapter extends BooruAdapter {
 	}
 
 	getPost(id: string): ResultAsync<BooruPost, BooruError> {
-		return this.fetchJson<GelbooruRawPost>(`${this.info.baseUrl}/posts/${id}.json`).map((rawPost) =>
+		return this.fetchJson<GelbooruPost>(`${this.info.baseUrl}/posts/${id}.json`).map((rawPost) =>
 			this.normalizePost(rawPost)
 		);
 	}
 
-	private normalizePosts(post: GelbooruRawPost[] | GelbooruRawPost | undefined): BooruPost[] {
+	private normalizePosts(post: GelbooruPost[] | GelbooruPost | undefined): BooruPost[] {
 		if (post === undefined) return [];
 
 		const posts = Array.isArray(post) ? post : [post];
 		return posts.map((p) => this.normalizePost(p));
 	}
 
-	private normalizePost(raw: GelbooruRawPost): BooruPost {
+	private normalizePost(raw: GelbooruPost): BooruPost {
 		return {
-			id: String(raw.id),
+			id: raw.id,
 			source: this.info.id,
-			fileUrl: this.proxyUrl(raw.file_url),
-			previewUrl: raw.preview_url,
+			file: {
+				url: this.proxyUrl(raw.file_url),
+				width: raw.width,
+				height: raw.height
+			},
+			preview: {
+				url: this.proxyUrl(raw.preview_url),
+				width: raw.preview_width,
+				height: raw.preview_height
+			},
+			mediaType: getFileType(raw.file_url),
 			tags: raw.tags.split(" ").filter(Boolean),
 			rating: this.normalizeRating(raw.rating),
 			score: raw.score,
-			width: raw.width,
-			height: raw.height,
 			createdAt: new Date(raw.created_at)
 		};
 	}
 
-	private normalizeRating(raw: GelbooruRawPost["rating"]): BooruPost["rating"] {
+	private normalizeRating(raw: GelbooruPost["rating"]): BooruPost["rating"] {
 		switch (raw) {
 			case "general":
 				return "safe";

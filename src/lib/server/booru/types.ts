@@ -1,15 +1,20 @@
 export interface BooruPost {
-	id: string;
+	id: number;
 	source: string;
-	fileUrl: string;
-	previewUrl: string;
-	// mediaType: "image" | "video";
+	file?: BooruAsset;
+	preview?: BooruAsset;
+	mediaType: "image" | "video";
 	tags: string[];
 	rating: "safe" | "questionable" | "explicit";
 	score: number;
+	favorites?: number;
+	createdAt: Date;
+}
+
+export interface BooruAsset {
+	url: string;
 	width: number;
 	height: number;
-	createdAt: Date;
 }
 
 export interface SearchOptions {
