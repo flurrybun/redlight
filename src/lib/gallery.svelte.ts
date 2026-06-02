@@ -1,6 +1,7 @@
 import type { ApiError } from "$lib/api";
 import { getTagMetadata, searchPosts } from "$lib/api";
 import type { BooruPost, BooruTag } from "$lib/server/booru/types";
+import { SvelteMap, SvelteSet } from "svelte/reactivity";
 
 const PREFETCH_THRESHOLD = 5;
 
@@ -11,9 +12,7 @@ export class Gallery {
 	hasMore = $state(true);
 	error = $state<ApiError | undefined>(undefined);
 
-	currentTags = $state<BooruTag[] | undefined>(undefined);
-	tagsLoading = $state(false);
-	tagsError = $state<ApiError | undefined>(undefined);
+	tagMap = $state(new SvelteMap<string, BooruTag>());
 
 	#booru = "";
 	#tags: string[] = [];
@@ -27,43 +26,17 @@ export class Gallery {
 		hasMore: this.hasMore
 	});
 
-	constructor() {
-		$effect(() => {
-			const post = this.currentPost;
-
-			this.currentTags = undefined;
-			this.tagsError = undefined;
-
-			if (!post || post.tags.length === 0) return;
-
-			this.tagsLoading = true;
-			const postId = post.id;
-
-			getTagMetadata(this.#booru, post.tags).then((result) => {
-				if (this.currentPost?.id !== postId) return;
-
-				result.match(
-					(tags) => {
-						this.currentTags = tags;
-						this.tagsLoading = false;
-					},
-					(error) => {
-						this.tagsError = error;
-						this.tagsLoading = false;
-					}
-				);
-			});
-		});
-	}
+	currentTags = $derived(
+		this.currentPost?.tags
+			.map((name) => this.tagMap.get(name))
+			.filter((tag) => tag !== undefined) ?? []
+	);
 
 	async search(booru: string, tags: string[]) {
 		this.posts = [];
 		this.currentIndex = 0;
 		this.hasMore = true;
 		this.error = undefined;
-
-		this.currentTags = undefined;
-		this.tagsError = undefined;
 
 		this.#booru = booru;
 		this.#tags = tags;
@@ -107,11 +80,35 @@ export class Gallery {
 				this.hasMore = data.posts.length === 20;
 				this.#currentPage += 1;
 				this.isLoading = false;
+
+				this.#prefetchTags(data.posts);
 			},
 			(error) => {
 				this.error = error;
 				this.isLoading = false;
 			}
 		);
+	}
+
+	async #prefetchTags(posts: BooruPost[]) {
+		const missing = new SvelteSet<string>();
+
+		for (const post of posts) {
+			for (const tag of post.tags) {
+				if (this.tagMap.has(tag)) continue;
+
+				missing.add(tag);
+			}
+		}
+
+		if (missing.size === 0) return;
+
+		const result = await getTagMetadata(this.#booru, [...missing]);
+
+		if (result.isErr()) return;
+
+		for (const tag of result.value) {
+			this.tagMap.set(tag.name, tag);
+		}
 	}
 }
