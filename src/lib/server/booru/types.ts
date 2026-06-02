@@ -17,6 +17,23 @@ export interface BooruAsset {
 	height: number;
 }
 
+export interface BooruTag {
+	name: string;
+	category: TagCategory;
+	count: number;
+	aliases?: string[];
+	implications?: string[];
+}
+
+export type TagCategory =
+	| "general"
+	| "character"
+	| "copyright"
+	| "artist"
+	| "meta"
+	| "species"
+	| "lore";
+
 export interface SearchOptions {
 	tags: string[];
 	page?: number;
@@ -25,13 +42,13 @@ export interface SearchOptions {
 
 export interface SearchResult {
 	posts: BooruPost[];
-	total?: number; // not all boorus provide this
+	total?: number;
 	page: number;
 }
 
 export interface BooruInfo {
-	id: string; // e.g. "danbooru"
-	name: string; // e.g. "Danbooru"
+	id: string;
+	name: string;
 	baseUrl: string;
 	supportsMultipleTags: boolean;
 	maxLimit: number;

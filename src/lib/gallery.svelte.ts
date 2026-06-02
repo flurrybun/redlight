@@ -1,21 +1,24 @@
 import type { ApiError } from "$lib/api";
-import { searchPosts } from "$lib/api";
-import type { BooruPost } from "$lib/server/booru/types";
+import { getTagMetadata, searchPosts } from "$lib/api";
+import type { BooruPost, BooruTag } from "$lib/server/booru/types";
 
 const PREFETCH_THRESHOLD = 5;
 
-class Gallery {
+export class Gallery {
 	posts = $state<BooruPost[]>([]);
 	currentIndex = $state(0);
 	isLoading = $state(false);
 	hasMore = $state(true);
 	error = $state<ApiError | undefined>(undefined);
 
+	currentTags = $state<BooruTag[] | undefined>(undefined);
+	tagsLoading = $state(false);
+	tagsError = $state<ApiError | undefined>(undefined);
+
 	#booru = "";
 	#tags: string[] = [];
 	#currentPage = 0;
 
-	// currentPost = $derived(this.posts[this.currentIndex] as BooruPost | undefined);
 	currentPost = $derived(this.posts.at(this.currentIndex));
 
 	progress = $derived({
@@ -24,11 +27,43 @@ class Gallery {
 		hasMore: this.hasMore
 	});
 
+	constructor() {
+		$effect(() => {
+			const post = this.currentPost;
+
+			this.currentTags = undefined;
+			this.tagsError = undefined;
+
+			if (!post || post.tags.length === 0) return;
+
+			this.tagsLoading = true;
+			const postId = post.id;
+
+			getTagMetadata(this.#booru, post.tags).then((result) => {
+				if (this.currentPost?.id !== postId) return;
+
+				result.match(
+					(tags) => {
+						this.currentTags = tags;
+						this.tagsLoading = false;
+					},
+					(error) => {
+						this.tagsError = error;
+						this.tagsLoading = false;
+					}
+				);
+			});
+		});
+	}
+
 	async search(booru: string, tags: string[]) {
 		this.posts = [];
 		this.currentIndex = 0;
 		this.hasMore = true;
 		this.error = undefined;
+
+		this.currentTags = undefined;
+		this.tagsError = undefined;
 
 		this.#booru = booru;
 		this.#tags = tags;
@@ -80,5 +115,3 @@ class Gallery {
 		);
 	}
 }
-
-export const gallery = new Gallery();

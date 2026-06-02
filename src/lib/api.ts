@@ -1,4 +1,4 @@
-import type { BooruPost, SearchResult } from "$lib/server/booru/types";
+import type { BooruPost, BooruTag, SearchResult } from "$lib/server/booru/types";
 import { ResultAsync, errAsync, okAsync } from "neverthrow";
 
 export type ApiError =
@@ -50,4 +50,11 @@ export function searchPosts(params: SearchParams): ResultAsync<SearchResult, Api
 
 export function getPost(booru: string, id: string): ResultAsync<BooruPost, ApiError> {
 	return apiFetch<BooruPost>("/api/post", { booru, id });
+}
+
+export function getTagMetadata(booru: string, names: string[]): ResultAsync<BooruTag[], ApiError> {
+	return apiFetch<BooruTag[]>("/api/tags", {
+		booru,
+		names: names.join(" ")
+	});
 }

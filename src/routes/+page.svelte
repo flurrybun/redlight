@@ -1,35 +1,14 @@
 <script lang="ts">
-	// import { searchPosts } from "$lib/api";
-	import { gallery } from "$lib/gallery.svelte";
-	// import type { BooruPost } from "$lib/server/booru/types";
+	import { Gallery } from "$lib/gallery.svelte";
 	import { onMount } from "svelte";
 
 	const booru = "gelbooru";
-
-	// let results = $state<BooruPost[]>([]);
-	// let error = $state<string | undefined>();
+	const gallery = new Gallery();
 
 	let searchTags = $state<string>("lucky_star");
 	let tags = $derived(searchTags.split(" ").filter(Boolean));
 
 	async function handleSearch() {
-		// const result = await searchPosts({
-		// 	booru: "gelbooru",
-		// 	tags: tags,
-		// 	page: 0
-		// });
-
-		// console.log(result);
-
-		// result.match(
-		// 	(data) => {
-		// 		results = data.posts;
-		// 	},
-		// 	(err) => {
-		// 		error = err.kind === "http" ? `HTTP ${err.status}` : err.message;
-		// 	}
-		// );
-
 		gallery.search(booru, tags);
 	}
 
@@ -48,7 +27,7 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<section>
+<section class="p-4">
 	<input type="text" placeholder="Search tags (space-separated)" bind:value={searchTags} />
 	<button onclick={handleSearch}>Search</button>
 
@@ -57,9 +36,14 @@
 	{:else if gallery.error}
 		<p>Error: {gallery.error.kind}</p>
 	{:else if gallery.currentPost}
-		<img src={gallery.currentPost.file?.url} referrerpolicy="no-referrer" alt="hentai" />
+		<img src={gallery.currentPost.file?.url} alt="hentai" width="500" />
 		<p>
 			{gallery.progress.current} / {gallery.progress.loaded}{gallery.progress.hasMore ? "+" : ""}
 		</p>
+		<ul>
+			{#each gallery.currentTags as tag (tag.name)}
+				<li>{tag.name}: {tag.count}</li>
+			{/each}
+		</ul>
 	{/if}
 </section>

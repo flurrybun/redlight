@@ -1,5 +1,12 @@
 import { ResultAsync, err, errAsync, ok } from "neverthrow";
-import type { BooruError, BooruInfo, BooruPost, SearchOptions, SearchResult } from "./types";
+import type {
+	BooruError,
+	BooruInfo,
+	BooruPost,
+	BooruTag,
+	SearchOptions,
+	SearchResult
+} from "./types";
 
 export abstract class BooruAdapter {
 	protected info: BooruInfo;
@@ -12,6 +19,8 @@ export abstract class BooruAdapter {
 
 	abstract search(options: SearchOptions): ResultAsync<SearchResult, BooruError>;
 	abstract getPost(id: string): ResultAsync<BooruPost, BooruError>;
+	abstract getTagMetadata(names: string[]): ResultAsync<BooruTag[], BooruError>;
+	abstract searchTags(query: string, limit?: number): ResultAsync<BooruTag[], BooruError>;
 
 	protected fetchJson<T>(
 		url: string,
