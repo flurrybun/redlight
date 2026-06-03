@@ -1,4 +1,5 @@
-import { ResultAsync, err, errAsync, ok } from "neverthrow";
+import { Result, ResultAsync, err, ok } from "neverthrow";
+import z from "zod";
 import type {
 	BooruError,
 	BooruInfo,
@@ -22,77 +23,82 @@ export abstract class BooruAdapter {
 	abstract getTagMetadata(names: string[]): ResultAsync<BooruTag[], BooruError>;
 	abstract searchTags(query: string, limit?: number): ResultAsync<BooruTag[], BooruError>;
 
-	protected fetchJson<T>(
+	protected fetch(
 		url: string,
 		params: Record<string, string> = {}
-	): ResultAsync<T, BooruError> {
+	): ResultAsync<Response, BooruError> {
 		const merged = { ...this.defaultParams, ...params };
 		const fullUrl = `${url}?${new URLSearchParams(merged)}`;
 
 		return ResultAsync.fromPromise(
 			fetch(fullUrl, { headers: { Accept: "application/json" } }),
-			(e): BooruError => ({ kind: "network", message: String(e) })
+			(error): BooruError => ({ kind: "network", message: String(error) })
 		).andThen((res) => {
-			if (!res.ok) {
-				return err<T, BooruError>({
-					kind: "http",
-					status: res.status,
-					statusText: res.statusText
-				});
-			}
+			if (res.ok) return ok(res);
 
-			return ResultAsync.fromPromise(
-				res.json() as Promise<T>,
-				(e): BooruError => ({ kind: "parse", message: String(e) })
-			);
+			return err<Response, BooruError>({
+				kind: "http",
+				status: res.status,
+				statusText: res.statusText
+			});
 		});
 	}
 
-	protected fetchXml(
-		url: string,
-		params: Record<string, string> = {}
-	): ResultAsync<Document, BooruError> {
-		const mergedParams = { ...this.defaultParams, ...params };
-		const fullUrl = `${url}?${new URLSearchParams(mergedParams)}`;
-
+	protected parseJson(res: Response): ResultAsync<unknown, BooruError> {
 		return ResultAsync.fromPromise(
-			fetch(fullUrl, { headers: { Accept: "application/xml" } }),
-			(error): BooruError => ({ kind: "network", message: String(error) })
-		)
-			.andThen((res) => {
-				if (!res.ok) {
-					return errAsync<string, BooruError>({
-						kind: "http",
-						status: res.status,
-						statusText: res.statusText
-					});
-				}
+			res.json(),
+			(e): BooruError => ({ kind: "parse", message: String(e) })
+		);
+	}
 
-				return ResultAsync.fromPromise(
-					res.text(),
-					(e): BooruError => ({ kind: "parse", message: String(e) })
-				);
-			})
-			.andThen((text) => {
-				const parser = new DOMParser();
-				const doc = parser.parseFromString(text, "application/xml");
+	protected parseXml(res: Response): ResultAsync<Document, BooruError> {
+		return ResultAsync.fromPromise(
+			res.text(),
+			(e): BooruError => ({ kind: "parse", message: String(e) })
+		).andThen((text) => {
+			const parser = new DOMParser();
+			const doc = parser.parseFromString(text, "application/xml");
+			const errorNode = doc.querySelector("parsererror");
 
-				const errorNode = doc.querySelector("parsererror");
+			if (!errorNode) return ok(doc);
 
-				if (errorNode) {
-					return err<Document, BooruError>({
-						kind: "parse",
-						message: errorNode.textContent ?? "Unknown XML parse error"
-					});
-				}
-
-				return ok<Document, BooruError>(doc);
+			return err<Document, BooruError>({
+				kind: "parse",
+				message: errorNode.textContent
 			});
+		});
+	}
+
+	protected validate<T extends z.ZodTypeAny>(
+		schema: T,
+		data: unknown
+	): Result<z.infer<T>, BooruError> {
+		const result = schema.safeParse(data);
+
+		if (result.success) return ok(result.data);
+
+		return err({
+			kind: "validation" as const,
+			message: "Schema validation failed"
+		});
 	}
 
 	protected formatTags(tags: string[]): string {
 		return tags.join(" ");
 	}
+
+	// #validate<T extends z.ZodTypeAny>(schema: T, data: unknown): Result<z.infer<T>, BooruError> {
+	// 	const result = schema.safeParse(data);
+
+	// 	if (result.success) {
+	// 		return ok(result.data);
+	// 	} else {
+	// 		return err({
+	// 			kind: "validation",
+	// 			message: "Schema validation failed"
+	// 		});
+	// 	}
+	// }
 
 	getName() {
 		return this.info.name;

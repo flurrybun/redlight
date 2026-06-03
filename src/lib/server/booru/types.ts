@@ -57,4 +57,5 @@ export interface BooruInfo {
 export type BooruError =
 	| { kind: "network"; message: string }
 	| { kind: "http"; status: number; statusText: string }
-	| { kind: "parse"; message: string };
+	| { kind: "parse"; message: string }
+	| { kind: "validation"; message: string };

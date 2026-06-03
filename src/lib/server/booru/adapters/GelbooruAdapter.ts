@@ -1,6 +1,6 @@
 import { GELBOORU_API_KEY, GELBOORU_USER_ID } from "$env/static/private";
 import { getFileType } from "$lib/utils/media";
-import { type ResultAsync } from "neverthrow";
+import { err, ok, type ResultAsync } from "neverthrow";
 import { BooruAdapter } from "../BooruAdapter";
 import type {
 	BooruError,
@@ -10,63 +10,69 @@ import type {
 	SearchResult,
 	TagCategory
 } from "../types";
+import z from "zod";
 
-interface GelbooruPost {
-	id: number;
-	created_at: string;
-	score: number;
-	width: number;
-	height: number;
-	md5: string;
-	directory: string;
-	image: string; // file name without path
-	rating: "general" | "sensitive" | "questionable" | "explicit";
-	source: string;
-	owner: string;
-	creator_id: number;
-	parent_id: number;
-	sample: 0 | 1;
-	preview_height: number;
-	preview_width: number;
-	tags: string;
-	title: string; // "" if not provided
-	has_notes: "true" | "false";
-	has_comments: "true" | "false";
-	file_url: string;
-	preview_url: string;
-	sample_url: string;
-	sample_height: number;
-	sample_width: number;
-	status: string;
-	post_locked: 0 | 1;
-	has_children: "true" | "false";
-}
+export const GelbooruPostSchema = z.object({
+	id: z.number(),
+	created_at: z.string(),
+	score: z.number(),
+	width: z.number(),
+	height: z.number(),
+	md5: z.string(),
+	directory: z.string(),
+	image: z.string(),
+	rating: z.enum(["general", "sensitive", "questionable", "explicit"]),
+	source: z.string(),
+	owner: z.string(),
+	creator_id: z.number(),
+	parent_id: z.number(),
+	sample: z.union([z.literal(0), z.literal(1)]),
+	preview_height: z.number(),
+	preview_width: z.number(),
+	tags: z.string(),
+	title: z.string(),
+	has_notes: z.enum(["true", "false"]),
+	has_comments: z.enum(["true", "false"]),
+	file_url: z.string(),
+	preview_url: z.string(),
+	sample_url: z.string(),
+	sample_height: z.number(),
+	sample_width: z.number(),
+	status: z.string(),
+	post_locked: z.union([z.literal(0), z.literal(1)]),
+	has_children: z.enum(["true", "false"])
+});
 
-interface GelbooruPostResponse {
-	"@attributes": {
-		limit: number;
-		offset: number;
-		count: number;
-	};
-	post: GelbooruPost[] | GelbooruPost | undefined;
-}
+export const GelbooruPostResponseSchema = z.object({
+	"@attributes": z.object({
+		limit: z.number(),
+		offset: z.number(),
+		count: z.number()
+	}),
+	post: z.union([z.array(GelbooruPostSchema), GelbooruPostSchema, z.undefined()])
+});
 
-interface GelbooruTag {
-	id: number;
-	name: string;
-	count: number;
-	type: number;
-	ambiguous: 0 | 1;
-}
+export const GelbooruTagSchema = z.object({
+	id: z.number(),
+	name: z.string(),
+	count: z.number(),
+	type: z.number(),
+	ambiguous: z.union([z.literal(0), z.literal(1)])
+});
 
-interface GelbooruTagResponse {
-	"@attributes": {
-		limit: number;
-		offset: number;
-		count: number;
-	};
-	tag: GelbooruTag[] | GelbooruTag | undefined;
-}
+export const GelbooruTagResponseSchema = z.object({
+	"@attributes": z.object({
+		limit: z.number(),
+		offset: z.number(),
+		count: z.number()
+	}),
+	tag: z.union([z.array(GelbooruTagSchema), GelbooruTagSchema, z.undefined()])
+});
+
+export type GelbooruPost = z.infer<typeof GelbooruPostSchema>;
+export type GelbooruPostResponse = z.infer<typeof GelbooruPostResponseSchema>;
+export type GelbooruTag = z.infer<typeof GelbooruTagSchema>;
+export type GelbooruTagResponse = z.infer<typeof GelbooruTagResponseSchema>;
 
 export class GelbooruAdapter extends BooruAdapter {
 	constructor() {
@@ -81,68 +87,99 @@ export class GelbooruAdapter extends BooruAdapter {
 			{
 				user_id: GELBOORU_USER_ID,
 				api_key: GELBOORU_API_KEY,
+				page: "dapi",
+				q: "index",
 				json: "1"
 			}
 		);
 	}
 
 	search(options: SearchOptions): ResultAsync<SearchResult, BooruError> {
-		return this.fetchJson<GelbooruPostResponse>(`${this.info.baseUrl}/index.php`, {
-			page: "dapi",
+		const url = `${this.info.baseUrl}/index.php`;
+		const params = {
 			s: "post",
-			q: "index",
-			tags: options.tags.join(" "),
+			tags: this.formatTags(options.tags),
 			pid: String(options.page),
 			limit: String(options.limit)
-		}).map((res) => ({
-			posts: this.normalizePosts(res.post),
-			page: options.page,
-			total: res["@attributes"].count
-		}));
+		};
+
+		return this.fetch(url, params)
+			.andThen((res) => this.parseJson(res))
+			.andThen((data) => this.validate(GelbooruPostResponseSchema, data))
+			.map((res) => ({
+				posts: this.normalizePosts(res.post),
+				page: options.page,
+				total: res["@attributes"].count
+			}));
 	}
 
 	getPost(id: string): ResultAsync<BooruPost, BooruError> {
-		return this.fetchJson<GelbooruPost>(`${this.info.baseUrl}/posts/${id}.json`).map((rawPost) =>
-			this.normalizePost(rawPost)
-		);
+		const url = `${this.info.baseUrl}/index.php`;
+		const params = {
+			s: "post",
+			id
+		};
+
+		return this.fetch(url, params)
+			.andThen((res) => this.parseJson(res))
+			.andThen((data) => this.validate(GelbooruPostResponseSchema, data))
+			.andThen((res) => {
+				const post = this.normalizePosts(res.post).at(0);
+
+				return post !== undefined
+					? ok(post)
+					: err<never, BooruError>({ kind: "http", status: 404, statusText: "Not Found" });
+			});
 	}
 
 	getTagMetadata(names: string[]): ResultAsync<BooruTag[], BooruError> {
-		return this.fetchJson<GelbooruTagResponse>(`${this.info.baseUrl}/index.php`, {
+		const url = `${this.info.baseUrl}/index.php`;
+		const params = {
 			page: "dapi",
 			s: "tag",
 			q: "index",
 			names: names.join(" ")
-		}).map((res) => {
-			const tag = res.tag ?? [];
-			const tags = Array.isArray(tag) ? tag : [tag];
+		};
 
-			return tags.map((tag) => ({
-				name: tag.name,
-				category: this.normalizeTagCategory(tag.type),
-				count: tag.count
-			}));
-		});
+		return this.fetch(url, params)
+			.andThen((res) => this.parseJson(res))
+			.andThen((data) => this.validate(GelbooruTagResponseSchema, data))
+			.map((res) => {
+				const tag = res.tag ?? [];
+				const tags = Array.isArray(tag) ? tag : [tag];
+
+				return tags.map((tag) => ({
+					name: tag.name,
+					category: this.normalizeTagCategory(tag.type),
+					count: tag.count
+				}));
+			});
 	}
 
 	searchTags(query: string, limit = 10): ResultAsync<BooruTag[], BooruError> {
-		return this.fetchJson<GelbooruTagResponse>(`${this.info.baseUrl}/index.php`, {
+		const url = `${this.info.baseUrl}/index.php`;
+		const params = {
 			page: "dapi",
 			s: "tag",
 			q: "index",
 			name_pattern: `${query}%`,
 			limit: String(limit),
 			orderby: "count"
-		}).map((res) => {
-			const tag = res.tag ?? [];
-			const tags = Array.isArray(tag) ? tag : [tag];
+		};
 
-			return tags.map((tag) => ({
-				name: tag.name,
-				category: this.normalizeTagCategory(tag.type),
-				count: tag.count
-			}));
-		});
+		return this.fetch(url, params)
+			.andThen((res) => this.parseJson(res))
+			.andThen((data) => this.validate(GelbooruTagResponseSchema, data))
+			.map((res) => {
+				const tag = res.tag ?? [];
+				const tags = Array.isArray(tag) ? tag : [tag];
+
+				return tags.map((tag) => ({
+					name: tag.name,
+					category: this.normalizeTagCategory(tag.type),
+					count: tag.count
+				}));
+			});
 	}
 
 	private normalizePosts(post: GelbooruPost[] | GelbooruPost | undefined): BooruPost[] {
