@@ -5,7 +5,7 @@ import { SvelteMap, SvelteSet } from "svelte/reactivity";
 
 const PREFETCH_THRESHOLD = 5;
 
-export class Gallery {
+class Gallery {
 	posts = $state<BooruPost[]>([]);
 	currentIndex = $state(0);
 	isLoading = $state(false);
@@ -112,3 +112,5 @@ export class Gallery {
 		}
 	}
 }
+
+export const gallery = new Gallery();

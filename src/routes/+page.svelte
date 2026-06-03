@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { Gallery } from "$lib/gallery.svelte";
+	import MediaViewer from "$lib/components/MediaViewer.svelte";
+	import { gallery } from "$lib/gallery.svelte";
 	import { onMount } from "svelte";
 
 	const booru = "gelbooru";
-	const gallery = new Gallery();
 
 	let searchTags = $state<string>("lucky_star");
 	let tags = $derived(searchTags.split(" ").filter(Boolean));
@@ -31,19 +31,7 @@
 	<input type="text" placeholder="Search tags (space-separated)" bind:value={searchTags} />
 	<button onclick={handleSearch}>Search</button>
 
-	{#if gallery.isLoading && gallery.posts.length === 0}
-		<p>Loading...</p>
-	{:else if gallery.error}
-		<p>Error: {gallery.error.kind}</p>
-	{:else if gallery.currentPost}
-		<img src={gallery.currentPost.file?.url} alt="hentai" width="500" />
-		<p>
-			{gallery.progress.current} / {gallery.progress.loaded}{gallery.progress.hasMore ? "+" : ""}
-		</p>
-		<ul>
-			{#each gallery.currentTags as tag (tag.name)}
-				<li>{tag.name}: {tag.count}</li>
-			{/each}
-		</ul>
+	{#if gallery.currentPost}
+		<MediaViewer post={gallery.currentPost} />
 	{/if}
 </section>
