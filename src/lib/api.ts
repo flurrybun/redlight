@@ -34,17 +34,17 @@ function apiFetch<T>(url: string, params: Record<string, string> = {}): ResultAs
 
 export type SearchParams = {
 	booru: string;
-	tags?: string[];
-	page?: number;
-	limit?: number;
+	tags: string[];
+	page: number;
+	limit: number;
 };
 
 export function searchPosts(params: SearchParams): ResultAsync<SearchResult, ApiError> {
 	return apiFetch<SearchResult>("/api/search", {
 		booru: params.booru,
-		...(params.tags?.length ? { tags: params.tags.join(",") } : {}),
-		...(params.page !== undefined ? { page: String(params.page) } : {}),
-		...(params.limit !== undefined ? { limit: String(params.limit) } : {})
+		tags: params.tags.join(","),
+		page: String(params.page),
+		limit: String(params.limit)
 	});
 }
 

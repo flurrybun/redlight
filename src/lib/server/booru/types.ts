@@ -36,8 +36,8 @@ export type TagCategory =
 
 export interface SearchOptions {
 	tags: string[];
-	page?: number;
-	limit?: number;
+	page: number;
+	limit: number;
 }
 
 export interface SearchResult {

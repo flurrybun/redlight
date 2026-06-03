@@ -92,11 +92,11 @@ export class GelbooruAdapter extends BooruAdapter {
 			s: "post",
 			q: "index",
 			tags: options.tags.join(" "),
-			pid: String(options.page ?? 0),
-			limit: String(options.limit ?? 20)
+			pid: String(options.page),
+			limit: String(options.limit)
 		}).map((res) => ({
 			posts: this.normalizePosts(res.post),
-			page: options.page ?? 0,
+			page: options.page,
 			total: res["@attributes"].count
 		}));
 	}
