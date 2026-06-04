@@ -35,8 +35,8 @@ export class TagCache {
 		});
 	}
 
-	searchTags(query: string, limit?: number) {
-		return this.#adapter.searchTags(query, limit);
+	autocompleteTag(tag: string, limit: number) {
+		return this.#adapter.autocompleteTag(tag, limit);
 	}
 
 	invalidate() {

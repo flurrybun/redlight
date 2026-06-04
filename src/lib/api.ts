@@ -13,11 +13,11 @@ function apiFetch<T>(url: string, params: Record<string, string> = {}): ResultAs
 
 	return ResultAsync.fromPromise(
 		fetch(fullUrl, { headers: { Accept: "application/json" } }),
-		(e): ApiError => ({ kind: "network", message: String(e) })
+		(error): ApiError => ({ kind: "network", message: String(error) })
 	).andThen((res) =>
 		ResultAsync.fromPromise(
 			res.json() as Promise<ApiResponse<T>>,
-			(e): ApiError => ({ kind: "parse", message: String(e) })
+			(error): ApiError => ({ kind: "parse", message: String(error) })
 		).andThen((body) => {
 			if (!res.ok) {
 				return errAsync<T, ApiError>(

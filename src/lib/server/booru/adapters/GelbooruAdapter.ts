@@ -1,7 +1,9 @@
 import { GELBOORU_API_KEY, GELBOORU_USER_ID } from "$env/static/private";
 import { getFileType } from "$lib/utils/media";
-import { err, ok, type ResultAsync } from "neverthrow";
+import { type ResultAsync } from "neverthrow";
+import z from "zod";
 import { BooruAdapter } from "../BooruAdapter";
+import { parseJson, processSearchResult, validate } from "../pipeline";
 import type {
 	BooruError,
 	BooruPost,
@@ -10,7 +12,6 @@ import type {
 	SearchResult,
 	TagCategory
 } from "../types";
-import z from "zod";
 
 export const GelbooruPostSchema = z.object({
 	id: z.number(),
@@ -95,55 +96,34 @@ export class GelbooruAdapter extends BooruAdapter {
 	}
 
 	search(options: SearchOptions): ResultAsync<SearchResult, BooruError> {
-		const url = `${this.info.baseUrl}/index.php`;
 		const params = {
 			s: "post",
-			tags: this.formatTags(options.tags),
+			tags: options.tags.join(" "),
 			pid: String(options.page),
 			limit: String(options.limit)
 		};
 
-		return this.fetch(url, params)
-			.andThen((res) => this.parseJson(res))
-			.andThen((data) => this.validate(GelbooruPostResponseSchema, data))
-			.map((res) => ({
-				posts: this.normalizePosts(res.post),
-				page: options.page,
-				total: res["@attributes"].count
-			}));
+		return processSearchResult(
+			this.fetch(this.info.baseUrl, params)
+				.andThen(parseJson)
+				.andThen(validate(GelbooruPostResponseSchema))
+				.map((res) => ({
+					posts: this.normalizePosts(res.post),
+					page: options.page,
+					total: res["@attributes"].count
+				}))
+		);
 	}
 
-	getPost(id: string): ResultAsync<BooruPost, BooruError> {
-		const url = `${this.info.baseUrl}/index.php`;
+	getTagMetadata(tags: string[]): ResultAsync<BooruTag[], BooruError> {
 		const params = {
-			s: "post",
-			id
-		};
-
-		return this.fetch(url, params)
-			.andThen((res) => this.parseJson(res))
-			.andThen((data) => this.validate(GelbooruPostResponseSchema, data))
-			.andThen((res) => {
-				const post = this.normalizePosts(res.post).at(0);
-
-				return post !== undefined
-					? ok(post)
-					: err<never, BooruError>({ kind: "http", status: 404, statusText: "Not Found" });
-			});
-	}
-
-	getTagMetadata(names: string[]): ResultAsync<BooruTag[], BooruError> {
-		const url = `${this.info.baseUrl}/index.php`;
-		const params = {
-			page: "dapi",
 			s: "tag",
-			q: "index",
-			names: names.join(" ")
+			names: tags.join(" ")
 		};
 
-		return this.fetch(url, params)
-			.andThen((res) => this.parseJson(res))
-			.andThen((data) => this.validate(GelbooruTagResponseSchema, data))
+		return this.fetch(this.info.baseUrl, params)
+			.andThen(parseJson)
+			.andThen(validate(GelbooruTagResponseSchema))
 			.map((res) => {
 				const tag = res.tag ?? [];
 				const tags = Array.isArray(tag) ? tag : [tag];
@@ -156,20 +136,17 @@ export class GelbooruAdapter extends BooruAdapter {
 			});
 	}
 
-	searchTags(query: string, limit = 10): ResultAsync<BooruTag[], BooruError> {
-		const url = `${this.info.baseUrl}/index.php`;
+	autocompleteTag(tag: string, limit: number): ResultAsync<BooruTag[], BooruError> {
 		const params = {
-			page: "dapi",
 			s: "tag",
-			q: "index",
-			name_pattern: `${query}%`,
+			name_pattern: `${tag}%`,
 			limit: String(limit),
 			orderby: "count"
 		};
 
-		return this.fetch(url, params)
-			.andThen((res) => this.parseJson(res))
-			.andThen((data) => this.validate(GelbooruTagResponseSchema, data))
+		return this.fetch(this.info.baseUrl, params)
+			.andThen(parseJson)
+			.andThen(validate(GelbooruTagResponseSchema))
 			.map((res) => {
 				const tag = res.tag ?? [];
 				const tags = Array.isArray(tag) ? tag : [tag];

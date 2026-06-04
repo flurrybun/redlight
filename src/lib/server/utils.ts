@@ -17,5 +17,9 @@ function errorToStatus(error: BooruError): number {
 			return error.status;
 		case "parse":
 			return 502;
+		case "validation":
+			return 500;
+		case "rate-limit":
+			return 429;
 	}
 }

@@ -1,0 +1,59 @@
+import { err, ok, Result, ResultAsync } from "neverthrow";
+import { z } from "zod";
+import type { BooruError, SearchResult } from "./types";
+
+export function parseJson(res: Response): ResultAsync<unknown, BooruError> {
+	return ResultAsync.fromPromise(
+		res.json(),
+		(error): BooruError => ({ kind: "parse", message: String(error) })
+	);
+}
+
+export function parseXml(res: Response): ResultAsync<Document, BooruError> {
+	return ResultAsync.fromPromise(
+		res.text(),
+		(error): BooruError => ({ kind: "parse", message: String(error) })
+	).andThen((text) => {
+		const parser = new DOMParser();
+		const doc = parser.parseFromString(text, "application/xml");
+		const errorNode = doc.querySelector("parsererror");
+
+		if (!errorNode) return ok(doc);
+
+		return err<Document, BooruError>({
+			kind: "parse",
+			message: errorNode.textContent
+		});
+	});
+}
+
+export function validate<T extends z.ZodTypeAny>(
+	schema: T
+): (data: unknown) => Result<z.infer<T>, BooruError> {
+	return (data: unknown) => {
+		const result = schema.safeParse(data);
+
+		if (result.success) return ok(result.data);
+
+		return err({
+			kind: "validation",
+			message: "Schema validation failed"
+		});
+	};
+}
+
+export function processSearchResult(
+	result: ResultAsync<SearchResult, BooruError>
+): ResultAsync<SearchResult, BooruError> {
+	return result.map(deduplicatePostTags);
+}
+
+function deduplicatePostTags(result: SearchResult): SearchResult {
+	return {
+		...result,
+		posts: result.posts.map((post) => ({
+			...post,
+			tags: [...new Set(post.tags)]
+		}))
+	};
+}
