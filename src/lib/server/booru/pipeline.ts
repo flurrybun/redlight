@@ -1,4 +1,4 @@
-import { err, ok, Result, ResultAsync } from "neverthrow";
+import { err, errAsync, ok, okAsync, Result, ResultAsync } from "neverthrow";
 import { z } from "zod";
 import type { BooruError, SearchResult } from "./types";
 
@@ -40,6 +40,18 @@ export function validate<T extends z.ZodTypeAny>(
 			message: "Schema validation failed"
 		});
 	};
+}
+
+export function checkRateLimit(res: Response): ResultAsync<Response, BooruError> {
+	if (res.status !== 429) return okAsync(res);
+
+	const retryAfter = res.headers.get("retry-after");
+	const retryDate = retryAfter && new Date(Date.now() + Number(retryAfter) * 1000);
+
+	return errAsync<Response, BooruError>({
+		kind: "rate-limit",
+		retryDate: retryDate || undefined
+	});
 }
 
 export function processSearchResult(
