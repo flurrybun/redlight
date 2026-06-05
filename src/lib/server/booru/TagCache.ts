@@ -1,6 +1,6 @@
 import type { ResultAsync } from "neverthrow";
 import { okAsync } from "neverthrow";
-import type { BooruAdapter } from "./BooruAdapter";
+import type BooruAdapter from "./BooruAdapter";
 import type { BooruError, BooruTag } from "./types";
 
 export class TagCache {
