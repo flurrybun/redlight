@@ -52,9 +52,14 @@ export function getPost(booru: string, id: string): ResultAsync<BooruPost, ApiEr
 	return apiFetch<BooruPost>("/api/post", { booru, id });
 }
 
-export function getTagMetadata(booru: string, names: string[]): ResultAsync<BooruTag[], ApiError> {
+export function getTagMetadata(
+	booru: string,
+	names: string[],
+	limit: number
+): ResultAsync<BooruTag[], ApiError> {
 	return apiFetch<BooruTag[]>("/api/tags", {
 		booru,
-		names: names.join(" ")
+		names: names.join(" "),
+		limit: String(limit)
 	});
 }

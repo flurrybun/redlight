@@ -11,7 +11,7 @@ export class TagCache {
 		this.#adapter = adapter;
 	}
 
-	getTags(names: string[]): ResultAsync<BooruTag[], BooruError> {
+	getTags(names: string[], limit: number): ResultAsync<BooruTag[], BooruError> {
 		const cached: BooruTag[] = [];
 		const missing: string[] = [];
 
@@ -26,7 +26,7 @@ export class TagCache {
 			return okAsync(cached);
 		}
 
-		return this.#adapter.getTagMetadata(missing).map((fetched) => {
+		return this.#adapter.getTagMetadata(missing, limit).map((fetched) => {
 			fetched.forEach((tag) => {
 				this.#cache.set(tag.name, tag);
 			});

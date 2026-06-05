@@ -139,16 +139,17 @@ export default class E621Adapter extends BooruAdapter {
 		);
 	}
 
-	getTagMetadata(tags: string[]): ResultAsync<BooruTag[], BooruError> {
+	getTagMetadata(tags: string[], limit: number): ResultAsync<BooruTag[], BooruError> {
 		const url = `${this.info.baseUrl}/tags.json`;
 		const params = {
-			"search[name]": tags.join(",")
+			"search[name]": tags.join(","),
+			limit: String(limit)
 		};
 
 		return this.fetch(url, params)
 			.andThen(parseJson)
 			.andThen(validate(E621TagResponseSchema))
-			.map(this.normalizeTags);
+			.map((res) => this.normalizeTags(res));
 	}
 
 	autocompleteTag(tag: string, limit: number): ResultAsync<BooruTag[], BooruError> {
@@ -162,7 +163,7 @@ export default class E621Adapter extends BooruAdapter {
 		return this.fetch(url, params)
 			.andThen(parseJson)
 			.andThen(validate(E621TagResponseSchema))
-			.map(this.normalizeTags);
+			.map((res) => this.normalizeTags(res));
 	}
 
 	private normalizePosts(posts: E621Post[]): BooruPost[] {

@@ -136,10 +136,11 @@ export default class DanbooruAdapter extends BooruAdapter {
 		);
 	}
 
-	getTagMetadata(tags: string[]): ResultAsync<BooruTag[], BooruError> {
+	getTagMetadata(tags: string[], limit: number): ResultAsync<BooruTag[], BooruError> {
 		const url = `${this.info.baseUrl}/tags.json`;
 		const params = {
-			"search[name]": tags.join(",")
+			"search[name_comma]": tags.join(","),
+			limit: String(limit)
 		};
 
 		return this.fetch(url, params)

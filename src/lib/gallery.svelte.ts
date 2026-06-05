@@ -2,8 +2,10 @@ import type { ApiError } from "$lib/api";
 import { getTagMetadata, searchPosts } from "$lib/api";
 import type { BooruPost, BooruTag } from "$lib/server/booru/types";
 import { SvelteMap, SvelteSet } from "svelte/reactivity";
+import { chunk } from "./utils/array";
 
 const PREFETCH_THRESHOLD = 5;
+const TAG_BATCH_SIZE = 250;
 
 class Gallery {
 	posts = $state<BooruPost[]>([]);
@@ -103,13 +105,14 @@ class Gallery {
 
 		if (missing.size === 0) return;
 
-		const result = await getTagMetadata(this.#booru, [...missing]);
+		const batches = chunk([...missing], TAG_BATCH_SIZE);
 
-		if (result.isErr()) return;
+		batches.forEach(async (batch) => {
+			const result = await getTagMetadata(this.#booru, batch, TAG_BATCH_SIZE);
+			if (result.isErr()) return;
 
-		for (const tag of result.value) {
-			this.tagMap.set(tag.name, tag);
-		}
+			result.value.forEach((tag) => this.tagMap.set(tag.name, tag));
+		});
 	}
 }
 

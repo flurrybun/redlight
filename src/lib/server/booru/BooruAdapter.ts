@@ -12,7 +12,7 @@ export default abstract class BooruAdapter {
 	}
 
 	abstract search(options: SearchOptions): ResultAsync<SearchResult, BooruError>;
-	abstract getTagMetadata(tags: string[]): ResultAsync<BooruTag[], BooruError>;
+	abstract getTagMetadata(tags: string[], limit: number): ResultAsync<BooruTag[], BooruError>;
 	abstract autocompleteTag(tag: string, limit: number): ResultAsync<BooruTag[], BooruError>;
 
 	protected fetch(

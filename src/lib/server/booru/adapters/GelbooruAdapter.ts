@@ -115,10 +115,11 @@ export default class GelbooruAdapter extends BooruAdapter {
 		);
 	}
 
-	getTagMetadata(tags: string[]): ResultAsync<BooruTag[], BooruError> {
+	getTagMetadata(tags: string[], limit: number): ResultAsync<BooruTag[], BooruError> {
 		const params = {
 			s: "tag",
-			names: tags.join(" ")
+			names: tags.join(" "),
+			limit: String(limit)
 		};
 
 		return this.fetch(this.info.baseUrl, params)
