@@ -2,7 +2,7 @@ import { ResultAsync, err, ok } from "neverthrow";
 import { checkRateLimit } from "./pipeline";
 import type { BooruError, BooruInfo, BooruTag, SearchOptions, SearchResult } from "./types";
 
-export abstract class BooruAdapter {
+export default abstract class BooruAdapter {
 	protected info: BooruInfo;
 	protected defaultParams: Record<string, string>;
 
@@ -23,7 +23,9 @@ export abstract class BooruAdapter {
 		const fullUrl = `${url}?${new URLSearchParams(merged)}`;
 
 		return ResultAsync.fromPromise(
-			fetch(fullUrl, { headers: { Accept: "application/json" } }),
+			fetch(fullUrl, {
+				headers: { Accept: "application/json", "User-Agent": "flurrybun · bun.garden" }
+			}),
 			(error): BooruError => ({ kind: "network", message: String(error) })
 		)
 			.andThen(checkRateLimit)

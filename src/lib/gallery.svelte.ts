@@ -16,7 +16,7 @@ class Gallery {
 
 	#booru = "";
 	#tags: string[] = [];
-	#currentPage = 0;
+	#currentPage = 1;
 
 	currentPost = $derived(this.posts.at(this.currentIndex));
 
@@ -40,7 +40,7 @@ class Gallery {
 
 		this.#booru = booru;
 		this.#tags = tags;
-		this.#currentPage = 0;
+		this.#currentPage = 1;
 
 		await this.#fetchNextPage();
 	}

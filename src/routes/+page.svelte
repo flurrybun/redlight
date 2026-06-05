@@ -3,8 +3,7 @@
 	import { gallery } from "$lib/gallery.svelte";
 	import { onMount } from "svelte";
 
-	const booru = "gelbooru";
-
+	let booru = $state<string>("danbooru");
 	let searchTags = $state<string>("lucky_star");
 	let tags = $derived(searchTags.split(" ").filter(Boolean));
 
@@ -30,6 +29,15 @@
 <section class="p-4">
 	<input type="text" placeholder="Search tags (space-separated)" bind:value={searchTags} />
 	<button onclick={handleSearch}>Search</button>
+
+	<fieldset>
+		<input type="radio" name="booru" value="danbooru" bind:group={booru} id="danbooru" />
+		<label for="danbooru">Danbooru</label>
+		<input type="radio" name="booru" value="gelbooru" bind:group={booru} id="gelbooru" />
+		<label for="gelbooru">Gelbooru</label>
+		<input type="radio" name="booru" value="e621" bind:group={booru} id="e621" />
+		<label for="e621">e621</label>
+	</fieldset>
 
 	{#if gallery.currentPost}
 		<MediaViewer post={gallery.currentPost} />

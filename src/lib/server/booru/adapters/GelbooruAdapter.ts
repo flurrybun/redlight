@@ -2,7 +2,7 @@ import { GELBOORU_API_KEY, GELBOORU_USER_ID } from "$env/static/private";
 import { getFileType } from "$lib/utils/media";
 import { type ResultAsync } from "neverthrow";
 import z from "zod";
-import { BooruAdapter } from "../BooruAdapter";
+import BooruAdapter from "../BooruAdapter";
 import { parseJson, processSearchResult, validate } from "../pipeline";
 import type {
 	BooruError,
@@ -75,7 +75,7 @@ export type GelbooruPostResponse = z.infer<typeof GelbooruPostResponseSchema>;
 export type GelbooruTag = z.infer<typeof GelbooruTagSchema>;
 export type GelbooruTagResponse = z.infer<typeof GelbooruTagResponseSchema>;
 
-export class GelbooruAdapter extends BooruAdapter {
+export default class GelbooruAdapter extends BooruAdapter {
 	constructor() {
 		super(
 			{

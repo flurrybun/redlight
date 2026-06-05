@@ -1,6 +1,8 @@
-import type { BooruAdapter } from "./BooruAdapter";
+import DanbooruAdapter from "./adapters/DanbooruAdapter";
+import E621Adapter from "./adapters/E621Adapter";
+import GelbooruAdapter from "./adapters/GelbooruAdapter";
+import type BooruAdapter from "./BooruAdapter";
 import { TagCache } from "./TagCache";
-import { GelbooruAdapter } from "./adapters/GelbooruAdapter";
 
 interface BooruEntry {
 	adapter: BooruAdapter;
@@ -12,6 +14,20 @@ const registry = new Map<string, BooruEntry>([
 		"gelbooru",
 		(() => {
 			const adapter = new GelbooruAdapter();
+			return { adapter, tagCache: new TagCache(adapter) };
+		})()
+	],
+	[
+		"danbooru",
+		(() => {
+			const adapter = new DanbooruAdapter();
+			return { adapter, tagCache: new TagCache(adapter) };
+		})()
+	],
+	[
+		"e621",
+		(() => {
+			const adapter = new E621Adapter();
 			return { adapter, tagCache: new TagCache(adapter) };
 		})()
 	]
