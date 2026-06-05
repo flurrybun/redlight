@@ -145,7 +145,7 @@ export default class DanbooruAdapter extends BooruAdapter {
 		return this.fetch(url, params)
 			.andThen(parseJson)
 			.andThen(validate(DanbooruTagResponseSchema))
-			.map(this.normalizeTags);
+			.map((res) => this.normalizeTags(res));
 	}
 
 	autocompleteTag(tag: string, limit: number): ResultAsync<BooruTag[], BooruError> {
@@ -159,7 +159,7 @@ export default class DanbooruAdapter extends BooruAdapter {
 		return this.fetch(url, params)
 			.andThen(parseJson)
 			.andThen(validate(DanbooruTagResponseSchema))
-			.map(this.normalizeTags);
+			.map((res) => this.normalizeTags(res));
 	}
 
 	private normalizePosts(posts: DanbooruPost[]): BooruPost[] {
