@@ -99,7 +99,8 @@ export default class GelbooruAdapter extends BooruAdapter {
 		const params = {
 			s: "post",
 			tags: options.tags.join(" "),
-			pid: String(options.page),
+			// gelbooru uses 0-based page indexing
+			pid: String(options.page - 1),
 			limit: String(options.limit)
 		};
 
