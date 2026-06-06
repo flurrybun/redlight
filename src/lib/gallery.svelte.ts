@@ -14,7 +14,7 @@ class Gallery {
 	hasMore = $state(true);
 	error = $state<ApiError | undefined>(undefined);
 
-	tagMap = $state(new SvelteMap<string, BooruTag>());
+	tagMap = $state(new SvelteMap<string, SvelteMap<string, BooruTag>>());
 
 	#booru = "";
 	#tags: string[] = [];
@@ -30,7 +30,7 @@ class Gallery {
 
 	currentTags = $derived(
 		this.currentPost?.tags
-			.map((name) => this.tagMap.get(name))
+			.map((name) => this.tagMap.get(this.#booru)?.get(name))
 			.filter((tag) => tag !== undefined) ?? []
 	);
 
@@ -93,6 +93,11 @@ class Gallery {
 	}
 
 	async #prefetchTags(posts: BooruPost[]) {
+		if (!this.tagMap.has(this.#booru)) {
+			this.tagMap.set(this.#booru, new SvelteMap());
+		}
+
+		const booruTagMap = this.tagMap.get(this.#booru)!;
 		const missing = new SvelteSet<string>();
 
 		for (const post of posts) {
@@ -103,15 +108,13 @@ class Gallery {
 			}
 		}
 
-		if (missing.size === 0) return;
-
 		const batches = chunk([...missing], TAG_BATCH_SIZE);
 
 		batches.forEach(async (batch) => {
 			const result = await getTagMetadata(this.#booru, batch, TAG_BATCH_SIZE);
 			if (result.isErr()) return;
 
-			result.value.forEach((tag) => this.tagMap.set(tag.name, tag));
+			result.value.forEach((tag) => booruTagMap.set(tag.name, tag));
 		});
 	}
 }
