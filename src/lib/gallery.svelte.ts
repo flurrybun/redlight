@@ -1,6 +1,6 @@
 import type { ApiError } from "$lib/api";
 import { getTagMetadata, searchPosts } from "$lib/api";
-import type { BooruPost, BooruTag } from "$lib/server/booru/types";
+import type { BooruId, BooruPost, BooruTag } from "$lib/server/booru/types";
 import { SvelteMap, SvelteSet } from "svelte/reactivity";
 import { chunk } from "./utils/array";
 
@@ -14,9 +14,9 @@ class Gallery {
 	hasMore = $state(true);
 	error = $state<ApiError | undefined>(undefined);
 
-	tagMap = $state(new SvelteMap<string, SvelteMap<string, BooruTag>>());
+	tagMap = $state(new SvelteMap<BooruId, SvelteMap<string, BooruTag>>());
 
-	#booru = "";
+	#booru: BooruId = "danbooru";
 	#tags: string[] = [];
 	#currentPage = 1;
 
@@ -34,7 +34,7 @@ class Gallery {
 			.filter((tag) => tag !== undefined) ?? []
 	);
 
-	async search(booru: string, tags: string[]) {
+	async search(booru: BooruId, tags: string[]) {
 		this.posts = [];
 		this.currentIndex = 0;
 		this.hasMore = true;
@@ -100,13 +100,13 @@ class Gallery {
 		const booruTagMap = this.tagMap.get(this.#booru)!;
 		const missing = new SvelteSet<string>();
 
-		for (const post of posts) {
-			for (const tag of post.tags) {
-				if (this.tagMap.has(tag)) continue;
+		posts.forEach((post) => {
+			post.tags.forEach((tag) => {
+				if (booruTagMap.has(tag)) return;
 
 				missing.add(tag);
-			}
-		}
+			});
+		});
 
 		const batches = chunk([...missing], TAG_BATCH_SIZE);
 

@@ -3,13 +3,14 @@ import E621Adapter from "./adapters/E621Adapter";
 import GelbooruAdapter from "./adapters/GelbooruAdapter";
 import type BooruAdapter from "./BooruAdapter";
 import { TagCache } from "./TagCache";
+import type { BooruId } from "./types";
 
 interface BooruEntry {
 	adapter: BooruAdapter;
 	tagCache: TagCache;
 }
 
-const registry = new Map<string, BooruEntry>([
+const registry = new Map<BooruId, BooruEntry>([
 	[
 		"gelbooru",
 		(() => {
@@ -33,14 +34,14 @@ const registry = new Map<string, BooruEntry>([
 	]
 ]);
 
-export function getAdapter(id: string): BooruAdapter {
+export function getAdapter(id: BooruId): BooruAdapter {
 	const entry = registry.get(id);
 	if (!entry) throw new Error(`Unknown booru: "${id}"`);
 
 	return entry.adapter;
 }
 
-export function getTagCache(id: string): TagCache {
+export function getTagCache(id: BooruId): TagCache {
 	const entry = registry.get(id);
 	if (!entry) throw new Error(`Unknown booru: "${id}"`);
 

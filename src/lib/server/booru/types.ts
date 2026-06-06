@@ -1,3 +1,17 @@
+import { zodParse } from "$lib/utils/zod";
+import z from "zod";
+
+export const BooruIdSchema = z.enum(["gelbooru", "danbooru", "e621"]);
+export type BooruId = z.infer<typeof BooruIdSchema>;
+
+export const parseBooruId = zodParse(
+	BooruIdSchema,
+	(error): BooruError => ({
+		kind: "validation",
+		message: `Invalid booru ID: ${String(error)}`
+	})
+);
+
 export interface BooruPost {
 	id: number;
 	source: string;
@@ -47,7 +61,7 @@ export interface SearchResult {
 }
 
 export interface BooruInfo {
-	id: string;
+	id: BooruId;
 	name: string;
 	baseUrl: string;
 	supportsMultipleTags: boolean;

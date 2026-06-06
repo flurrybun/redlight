@@ -1,9 +1,10 @@
 <script lang="ts">
 	import MediaViewer from "$lib/components/MediaViewer.svelte";
 	import { gallery } from "$lib/gallery.svelte";
+	import type { BooruId } from "$lib/server/booru/types";
 	import { onMount } from "svelte";
 
-	let booru = $state<string>("danbooru");
+	let booru = $state<BooruId>("danbooru");
 	let searchTags = $state<string>("lucky_star");
 	let tags = $derived(searchTags.split(" ").filter(Boolean));
 

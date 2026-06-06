@@ -104,7 +104,7 @@ export default class DanbooruAdapter extends BooruAdapter {
 	constructor() {
 		super(
 			{
-				id: "Danbooru",
+				id: "danbooru",
 				name: "Danbooru",
 				baseUrl: "https://danbooru.donmai.us",
 				supportsMultipleTags: true,
