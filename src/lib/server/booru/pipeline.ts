@@ -1,6 +1,7 @@
 import { err, errAsync, ok, okAsync, Result, ResultAsync } from "neverthrow";
-import { z } from "zod";
+import z from "zod";
 import type { BooruError, SearchResult } from "./types";
+import { zodParse } from "$lib/utils/zod";
 
 export function parseJson(res: Response): ResultAsync<unknown, BooruError> {
 	return ResultAsync.fromPromise(
@@ -30,16 +31,10 @@ export function parseXml(res: Response): ResultAsync<Document, BooruError> {
 export function validate<T extends z.ZodTypeAny>(
 	schema: T
 ): (data: unknown) => Result<z.infer<T>, BooruError> {
-	return (data: unknown) => {
-		const result = schema.safeParse(data);
-
-		if (result.success) return ok(result.data);
-
-		return err({
-			kind: "validation",
-			message: "Schema validation failed"
-		});
-	};
+	return zodParse(schema, () => ({
+		kind: "validation",
+		message: "Schema validation failed"
+	}));
 }
 
 export function checkRateLimit(res: Response): ResultAsync<Response, BooruError> {
