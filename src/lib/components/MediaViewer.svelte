@@ -19,7 +19,9 @@
 		const img = new Image();
 
 		img.onload = () => {
-			preloadCache.set(post.file!.url, img);
+			if (!post.file) return;
+
+			preloadCache.set(post.file.url, img);
 			displayedPost = post;
 		};
 

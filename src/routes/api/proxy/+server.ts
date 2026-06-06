@@ -47,6 +47,22 @@ export const GET: RequestHandler = async ({ url, request }) => {
 		upstreamHeaders.set(header, value);
 	}
 
+	// const test = ...Object.fromEntries(
+	// 	FORWARDED_REQUEST_HEADERS.map((header) => [header, request.headers.get(header)]).filter(
+	// 		([, value]) => value !== null
+	// 	)
+	// );
+
+	const forwardedHeaders = FORWARDED_REQUEST_HEADERS.reduce<Record<string, string>>(
+		(acc, header) => {
+			const value = request.headers.get(header);
+			if (value !== null) acc[header] = value;
+
+			return acc;
+		},
+		{}
+	);
+
 	let upstreamResponse: Response;
 
 	try {
@@ -60,20 +76,16 @@ export const GET: RequestHandler = async ({ url, request }) => {
 				"Accept-Language": "en-US,en;q=0.9",
 
 				// forward the range header from the client (video seeking)
-				...Object.fromEntries(
-					FORWARDED_REQUEST_HEADERS.map((header) => [header, request.headers.get(header)]).filter(
-						([, value]) => value !== null
-					)
-				)
+				...forwardedHeaders
 			},
 			redirect: "follow"
 		});
-	} catch (e) {
-		error(502, `Failed to fetch upstream resource: ${e}`);
+	} catch {
+		error(502, "Failed to fetch upstream resource");
 	}
 
 	if (!upstreamResponse.ok && upstreamResponse.status !== 206) {
-		error(upstreamResponse.status, `Upstream server returned ${upstreamResponse.status}`);
+		error(upstreamResponse.status, `Upstream server returned ${String(upstreamResponse.status)}`);
 	}
 
 	const responseHeaders = new Headers();

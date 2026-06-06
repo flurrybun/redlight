@@ -21,9 +21,7 @@ function apiFetch<T>(url: string, params: Record<string, string> = {}): ResultAs
 		).andThen((body) => {
 			if (!res.ok) {
 				return errAsync<T, ApiError>(
-					body.ok === false
-						? body.error
-						: { kind: "http", status: res.status, statusText: res.statusText }
+					body.ok ? { kind: "http", status: res.status, statusText: res.statusText } : body.error
 				);
 			}
 
@@ -32,12 +30,12 @@ function apiFetch<T>(url: string, params: Record<string, string> = {}): ResultAs
 	);
 }
 
-export type SearchParams = {
+export interface SearchParams {
 	booru: BooruId;
 	tags: string[];
 	page: number;
 	limit: number;
-};
+}
 
 export function searchPosts(params: SearchParams): ResultAsync<SearchResult, ApiError> {
 	return apiFetch<SearchResult>("/api/search", {

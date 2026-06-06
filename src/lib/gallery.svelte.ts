@@ -76,14 +76,14 @@ class Gallery {
 			limit: 20
 		});
 
-		result.match(
-			(data) => {
+		await result.match(
+			async (data) => {
 				this.posts = [...this.posts, ...data.posts];
 				this.hasMore = data.posts.length === 20;
 				this.#currentPage += 1;
 				this.isLoading = false;
 
-				this.#prefetchTags(data.posts);
+				await this.#prefetchTags(data.posts);
 			},
 			(error) => {
 				this.error = error;
@@ -97,7 +97,9 @@ class Gallery {
 			this.tagMap.set(this.#booru, new SvelteMap());
 		}
 
-		const booruTagMap = this.tagMap.get(this.#booru)!;
+		const booruTagMap = this.tagMap.get(this.#booru);
+		if (!booruTagMap) return;
+
 		const missing = new SvelteSet<string>();
 
 		posts.forEach((post) => {
@@ -110,12 +112,12 @@ class Gallery {
 
 		const batches = chunk([...missing], TAG_BATCH_SIZE);
 
-		batches.forEach(async (batch) => {
+		for (const batch of batches) {
 			const result = await getTagMetadata(this.#booru, batch, TAG_BATCH_SIZE);
-			if (result.isErr()) return;
+			if (result.isErr()) continue;
 
 			result.value.forEach((tag) => booruTagMap.set(tag.name, tag));
-		});
+		}
 	}
 }
 

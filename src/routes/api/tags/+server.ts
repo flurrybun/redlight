@@ -6,7 +6,7 @@ import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ url }) => {
 	const booruId = parseBooruId(url.searchParams.get("booru"));
-	if (booruId.isErr()) error(400, `Invalid booru ID: ${url.searchParams.get("booru")}`);
+	if (booruId.isErr()) error(400, `Invalid booru ID: ${String(url.searchParams.get("booru"))}`);
 
 	const names = url.searchParams.get("names")?.split(" ").filter(Boolean) ?? [];
 	const limit = Number(url.searchParams.get("limit") ?? "250");

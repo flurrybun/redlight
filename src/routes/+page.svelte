@@ -8,16 +8,16 @@
 	let searchTags = $state<string>("lucky_star");
 	let tags = $derived(searchTags.split(" ").filter(Boolean));
 
-	async function handleSearch() {
-		gallery.search(booru, tags);
-	}
+	const handleSearch = async () => {
+		await gallery.search(booru, tags);
+	};
 
 	onMount(() => gallery.search(booru, tags));
 
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === "ArrowRight") gallery.next();
-		if (e.key === "ArrowLeft") gallery.previous();
-	}
+	const handleKeydown = (event: KeyboardEvent) => {
+		if (event.key === "ArrowRight") void gallery.next();
+		if (event.key === "ArrowLeft") gallery.previous();
+	};
 </script>
 
 <svelte:head>

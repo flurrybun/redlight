@@ -28,7 +28,7 @@ export function parseXml(res: Response): ResultAsync<Document, BooruError> {
 	});
 }
 
-export function validate<T extends z.ZodTypeAny>(
+export function validate<T extends z.ZodType>(
 	schema: T
 ): (data: unknown) => Result<z.infer<T>, BooruError> {
 	return zodParse(schema, () => ({
@@ -41,11 +41,11 @@ export function checkRateLimit(res: Response): ResultAsync<Response, BooruError>
 	if (res.status !== 429) return okAsync(res);
 
 	const retryAfter = res.headers.get("retry-after");
-	const retryDate = retryAfter && new Date(Date.now() + Number(retryAfter) * 1000);
+	const retryDate = retryAfter ? new Date(Date.now() + Number(retryAfter) * 1000) : undefined;
 
 	return errAsync<Response, BooruError>({
 		kind: "rate-limit",
-		retryDate: retryDate || undefined
+		retryDate: retryDate
 	});
 }
 
