@@ -3,7 +3,6 @@ import { getFileType } from "$lib/utils/media";
 import { type ResultAsync } from "neverthrow";
 import z from "zod";
 import BooruAdapter from "../BooruAdapter";
-import { parseJson, processSearchResult, validate } from "../pipeline";
 import type {
 	BooruError,
 	BooruPost,
@@ -104,10 +103,12 @@ export default class GelbooruAdapter extends BooruAdapter {
 			limit: String(options.limit)
 		};
 
-		return processSearchResult(
+		return this.processSearchResult(
 			this.fetch(this.info.baseUrl, params)
-				.andThen(parseJson)
-				.andThen(validate(GelbooruPostResponseSchema))
+				.andThen((res) => this.parseJson(res))
+				.andThen((res) =>
+					this.validate(GelbooruPostResponseSchema, res, { url: this.info.baseUrl })
+				)
 				.map((res) => ({
 					posts: this.normalizePosts(res.post),
 					page: options.page,
@@ -124,8 +125,8 @@ export default class GelbooruAdapter extends BooruAdapter {
 		};
 
 		return this.fetch(this.info.baseUrl, params)
-			.andThen(parseJson)
-			.andThen(validate(GelbooruTagResponseSchema))
+			.andThen((res) => this.parseJson(res))
+			.andThen((res) => this.validate(GelbooruTagResponseSchema, res, { url: this.info.baseUrl }))
 			.map((res) => {
 				const tag = res.tag ?? [];
 				const tags = Array.isArray(tag) ? tag : [tag];
@@ -147,8 +148,8 @@ export default class GelbooruAdapter extends BooruAdapter {
 		};
 
 		return this.fetch(this.info.baseUrl, params)
-			.andThen(parseJson)
-			.andThen(validate(GelbooruTagResponseSchema))
+			.andThen((res) => this.parseJson(res))
+			.andThen((res) => this.validate(GelbooruTagResponseSchema, res, { url: this.info.baseUrl }))
 			.map((res) => {
 				const tag = res.tag ?? [];
 				const tags = Array.isArray(tag) ? tag : [tag];

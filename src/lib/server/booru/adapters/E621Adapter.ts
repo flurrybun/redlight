@@ -2,7 +2,6 @@ import { getExtensionType } from "$lib/utils/media";
 import type { ResultAsync } from "neverthrow";
 import z from "zod";
 import BooruAdapter from "../BooruAdapter";
-import { parseJson, processSearchResult, validate } from "../pipeline";
 import type {
 	BooruError,
 	BooruPost,
@@ -128,10 +127,10 @@ export default class E621Adapter extends BooruAdapter {
 			limit: String(options.limit)
 		};
 
-		return processSearchResult(
+		return this.processSearchResult(
 			this.fetch(url, params)
-				.andThen(parseJson)
-				.andThen(validate(E621PostResponseSchema))
+				.andThen((res) => this.parseJson(res))
+				.andThen((res) => this.validate(E621PostResponseSchema, res, { url }))
 				.map((res) => ({
 					posts: this.normalizePosts(res.posts),
 					page: options.page
@@ -147,8 +146,8 @@ export default class E621Adapter extends BooruAdapter {
 		};
 
 		return this.fetch(url, params)
-			.andThen(parseJson)
-			.andThen(validate(E621TagResponseSchema))
+			.andThen((res) => this.parseJson(res))
+			.andThen((res) => this.validate(E621TagResponseSchema, res, { url }))
 			.map((res) => this.normalizeTags(res));
 	}
 
@@ -161,8 +160,8 @@ export default class E621Adapter extends BooruAdapter {
 		};
 
 		return this.fetch(url, params)
-			.andThen(parseJson)
-			.andThen(validate(E621TagResponseSchema))
+			.andThen((res) => this.parseJson(res))
+			.andThen((res) => this.validate(E621TagResponseSchema, res, { url }))
 			.map((res) => this.normalizeTags(res));
 	}
 

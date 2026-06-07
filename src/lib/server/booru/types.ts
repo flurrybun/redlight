@@ -1,16 +1,7 @@
-import { zodParse } from "$lib/utils/zod";
 import z from "zod";
 
 export const BooruIdSchema = z.enum(["gelbooru", "danbooru", "e621"]);
 export type BooruId = z.infer<typeof BooruIdSchema>;
-
-export const parseBooruId = zodParse(
-	BooruIdSchema,
-	(error): BooruError => ({
-		kind: "validation",
-		message: `Invalid booru ID: ${String(error)}`
-	})
-);
 
 export interface BooruPost {
 	id: number;
@@ -68,9 +59,14 @@ export interface BooruInfo {
 	maxLimit: number;
 }
 
-export type BooruError =
-	| { kind: "network"; message: string }
-	| { kind: "http"; status: number; statusText: string }
-	| { kind: "parse"; message: string }
-	| { kind: "validation"; message: string }
+export type BooruErrorDetail =
+	| { kind: "network" }
+	| { kind: "http"; status: number }
+	| { kind: "parse" }
+	| { kind: "validation"; error: z.ZodError }
 	| { kind: "rate-limit"; retryDate?: Date };
+
+export interface BooruError {
+	info: BooruInfo;
+	detail: BooruErrorDetail;
+}

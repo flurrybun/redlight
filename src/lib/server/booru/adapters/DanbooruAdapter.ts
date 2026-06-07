@@ -1,3 +1,4 @@
+import { getExtensionType } from "$lib/utils/media";
 import type { ResultAsync } from "neverthrow";
 import z from "zod";
 import BooruAdapter from "../BooruAdapter";
@@ -9,8 +10,6 @@ import type {
 	SearchResult,
 	TagCategory
 } from "../types";
-import { getExtensionType } from "$lib/utils/media";
-import { processSearchResult, parseJson, validate } from "../pipeline";
 
 export const DanbooruPostSchema = z.object({
 	id: z.number(),
@@ -125,10 +124,10 @@ export default class DanbooruAdapter extends BooruAdapter {
 			limit: String(options.limit)
 		};
 
-		return processSearchResult(
+		return this.processSearchResult(
 			this.fetch(url, params)
-				.andThen(parseJson)
-				.andThen(validate(DanbooruPostResponseSchema))
+				.andThen((res) => this.parseJson(res))
+				.andThen((res) => this.validate(DanbooruPostResponseSchema, res, { url }))
 				.map((res) => ({
 					posts: this.normalizePosts(res),
 					page: options.page
@@ -144,8 +143,8 @@ export default class DanbooruAdapter extends BooruAdapter {
 		};
 
 		return this.fetch(url, params)
-			.andThen(parseJson)
-			.andThen(validate(DanbooruTagResponseSchema))
+			.andThen((res) => this.parseJson(res))
+			.andThen((res) => this.validate(DanbooruTagResponseSchema, res, { url }))
 			.map((res) => this.normalizeTags(res));
 	}
 
@@ -158,8 +157,8 @@ export default class DanbooruAdapter extends BooruAdapter {
 		};
 
 		return this.fetch(url, params)
-			.andThen(parseJson)
-			.andThen(validate(DanbooruTagResponseSchema))
+			.andThen((res) => this.parseJson(res))
+			.andThen((res) => this.validate(DanbooruTagResponseSchema, res, { url }))
 			.map((res) => this.normalizeTags(res));
 	}
 

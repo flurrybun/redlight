@@ -16,7 +16,7 @@ type ApiCallback<TSchema extends z.ZodType, TData> = (
 ) => Promise<Result<TData, ApiError>>;
 
 function isBooruError(error: BooruError | ApiError): error is BooruError {
-	return "kind" in error;
+	return "detail" in error;
 }
 
 /**
