@@ -1,17 +1,15 @@
+import { createRequestHandler } from "$lib/server/api/handler";
 import { getAdapter } from "$lib/server/booru/registry";
-import { parseBooruId } from "$lib/server/booru/types";
-import { resultToResponse } from "$lib/server/utils";
-import { error, type RequestHandler } from "@sveltejs/kit";
+import { BooruIdSchema } from "$lib/server/booru/types";
+import z from "zod";
 
-export const GET: RequestHandler = async ({ url }) => {
-	const booruId = parseBooruId(url.searchParams.get("booru"));
-	if (booruId.isErr()) error(400, `Invalid booru ID: ${String(url.searchParams.get("booru"))}`);
+const SearchParamsSchema = z.strictObject({
+	booru: BooruIdSchema,
+	tags: z.string().transform((tags) => tags.split(",").filter(Boolean)),
+	page: z.coerce.number().int().min(1),
+	limit: z.coerce.number().int().min(1)
+});
 
-	const tags = url.searchParams.get("tags")?.split(",") ?? [];
-	const page = Number(url.searchParams.get("page") ?? 1);
-	const limit = Number(url.searchParams.get("limit") ?? 20);
-
-	const adapter = getAdapter(booruId.value);
-
-	return resultToResponse(await adapter.search({ tags, page, limit }));
-};
+export const GET = createRequestHandler(SearchParamsSchema, async ({ booru, tags, page, limit }) =>
+	getAdapter(booru).search({ tags, page, limit })
+);

@@ -1,7 +1,7 @@
-import type { ApiError } from "$lib/api";
-import { getTagMetadata, searchPosts } from "$lib/api";
 import type { BooruId, BooruPost, BooruTag } from "$lib/server/booru/types";
 import { SvelteMap, SvelteSet } from "svelte/reactivity";
+import { getTagMetadata, searchPosts } from "./api/client";
+import type { ApiError } from "./api/types";
 import { chunk } from "./utils/array";
 
 const PREFETCH_THRESHOLD = 5;

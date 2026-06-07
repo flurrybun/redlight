@@ -1,33 +1,27 @@
 import type { BooruId, BooruPost, BooruTag, SearchResult } from "$lib/server/booru/types";
-import { ResultAsync, errAsync, okAsync } from "neverthrow";
-
-export type ApiError =
-	| { kind: "network"; message: string }
-	| { kind: "http"; status: number; statusText: string }
-	| { kind: "parse"; message: string };
-
-type ApiResponse<T> = { ok: true; data: T } | { ok: false; error: ApiError };
+import { ResultAsync } from "neverthrow";
+import { apiResponseToResult, type ApiError, type ApiResponse } from "./types";
 
 function apiFetch<T>(url: string, params: Record<string, string> = {}): ResultAsync<T, ApiError> {
-	const fullUrl = Object.keys(params).length > 0 ? `${url}?${new URLSearchParams(params)}` : url;
+	const fullUrl = `${url}?${new URLSearchParams(params)}`;
 
 	return ResultAsync.fromPromise(
 		fetch(fullUrl, { headers: { Accept: "application/json" } }),
-		(error): ApiError => ({ kind: "network", message: String(error) })
-	).andThen((res) =>
-		ResultAsync.fromPromise(
-			res.json() as Promise<ApiResponse<T>>,
-			(error): ApiError => ({ kind: "parse", message: String(error) })
-		).andThen((body) => {
-			if (!res.ok) {
-				return errAsync<T, ApiError>(
-					body.ok ? { kind: "http", status: res.status, statusText: res.statusText } : body.error
-				);
-			}
-
-			return body.ok ? okAsync<T, ApiError>(body.data) : errAsync<T, ApiError>(body.error);
+		(error): ApiError => ({
+			title: "Network Error",
+			message: String(error)
 		})
-	);
+	)
+		.andThen((res) =>
+			ResultAsync.fromPromise(
+				res.json() as Promise<ApiResponse<T>>,
+				(error): ApiError => ({
+					title: "Parse Error",
+					message: String(error)
+				})
+			)
+		)
+		.andThen(apiResponseToResult);
 }
 
 export interface SearchParams {

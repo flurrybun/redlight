@@ -1,20 +1,14 @@
+import { createRequestHandler } from "$lib/server/api/handler";
 import { getTagCache } from "$lib/server/booru/registry";
-import { parseBooruId } from "$lib/server/booru/types";
-import { resultToResponse } from "$lib/server/utils";
-import { error, json } from "@sveltejs/kit";
-import type { RequestHandler } from "./$types";
+import { BooruIdSchema } from "$lib/server/booru/types";
+import z from "zod";
 
-export const GET: RequestHandler = async ({ url }) => {
-	const booruId = parseBooruId(url.searchParams.get("booru"));
-	if (booruId.isErr()) error(400, `Invalid booru ID: ${String(url.searchParams.get("booru"))}`);
+const SearchParamsSchema = z.strictObject({
+	booru: BooruIdSchema,
+	names: z.string().transform((tags) => tags.split(",").filter(Boolean)),
+	limit: z.coerce.number().int().min(1)
+});
 
-	const names = url.searchParams.get("names")?.split(" ").filter(Boolean) ?? [];
-	const limit = Number(url.searchParams.get("limit") ?? "250");
-
-	if (names.length === 0) {
-		return json({ ok: true, data: [] });
-	}
-
-	const tagCache = getTagCache(booruId.value);
-	return resultToResponse(await tagCache.getTags(names, limit));
-};
+export const GET = createRequestHandler(SearchParamsSchema, async ({ booru, names, limit }) =>
+	getTagCache(booru).getTags(names, limit)
+);

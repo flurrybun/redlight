@@ -1,4 +1,6 @@
+import { parseSearchParams } from "$lib/server/api/handler";
 import { error } from "@sveltejs/kit";
+import z from "zod";
 import type { RequestHandler } from "./$types";
 
 const ALLOWED_HOSTS = new Set(["gelbooru.com", "img2.gelbooru.com"]);
@@ -18,17 +20,22 @@ const FORWARDED_RESPONSE_HEADERS = [
 
 const FORWARDED_REQUEST_HEADERS = ["range", "if-range", "if-modified-since", "if-none-match"];
 
-export const GET: RequestHandler = async ({ url, request }) => {
-	const imageUrl = url.searchParams.get("url");
+const SearchParamsSchema = z.object({
+	url: z.url()
+});
 
-	if (!imageUrl) error(400, "Missing url parameter");
+export const GET: RequestHandler = async ({ url, request }) => {
+	const parseResult = parseSearchParams(url.searchParams, SearchParamsSchema);
+	if (parseResult.isErr()) error(400, parseResult.error.message);
+
+	const { url: imageUrl } = parseResult.value;
 
 	let parsedUrl: URL;
 
 	try {
 		parsedUrl = new URL(imageUrl);
 	} catch {
-		error(400, "Invalid url parameter");
+		error(400, "Invalid URL parameter");
 	}
 
 	if (parsedUrl.protocol !== "https:") {
@@ -46,12 +53,6 @@ export const GET: RequestHandler = async ({ url, request }) => {
 
 		upstreamHeaders.set(header, value);
 	}
-
-	// const test = ...Object.fromEntries(
-	// 	FORWARDED_REQUEST_HEADERS.map((header) => [header, request.headers.get(header)]).filter(
-	// 		([, value]) => value !== null
-	// 	)
-	// );
 
 	const forwardedHeaders = FORWARDED_REQUEST_HEADERS.reduce<Record<string, string>>(
 		(acc, header) => {
@@ -85,7 +86,10 @@ export const GET: RequestHandler = async ({ url, request }) => {
 	}
 
 	if (!upstreamResponse.ok && upstreamResponse.status !== 206) {
-		error(upstreamResponse.status, `Upstream server returned ${String(upstreamResponse.status)}`);
+		error(
+			upstreamResponse.status,
+			`Upstream server returned HTTP ${String(upstreamResponse.status)}`
+		);
 	}
 
 	const responseHeaders = new Headers();
