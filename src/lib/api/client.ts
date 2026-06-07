@@ -51,7 +51,7 @@ export function getTagMetadata(
 ): ResultAsync<BooruTag[], ApiError> {
 	return apiFetch<BooruTag[]>("/api/tags", {
 		booru,
-		names: names.join(" "),
+		names: names.join(","),
 		limit: String(limit)
 	});
 }
