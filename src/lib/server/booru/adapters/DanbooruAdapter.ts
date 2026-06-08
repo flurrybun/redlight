@@ -17,7 +17,7 @@ export const DanbooruPostSchema = z.object({
 	uploader_id: z.number(),
 	score: z.number(),
 	source: z.string(),
-	md5: z.string(),
+	md5: z.string().optional(),
 	rating: z.enum(["g", "s", "q", "e"]),
 	image_width: z.number(),
 	image_height: z.number(),
@@ -47,14 +47,14 @@ export const DanbooruPostSchema = z.object({
 		id: z.number(),
 		created_at: z.string(),
 		updated_at: z.string(),
-		md5: z.string(),
+		md5: z.string().optional(),
 		file_ext: z.string(),
 		file_size: z.number(),
 		image_width: z.number(),
 		image_height: z.number(),
 		duration: z.nullable(z.number()),
 		status: z.string(),
-		file_key: z.string(),
+		file_key: z.string().optional(),
 		is_public: z.boolean(),
 		pixel_hash: z.string(),
 		variants: z
@@ -74,9 +74,9 @@ export const DanbooruPostSchema = z.object({
 	tag_string_copyright: z.string(),
 	tag_string_artist: z.string(),
 	tag_string_meta: z.string(),
-	file_url: z.string(),
-	large_file_url: z.string(),
-	preview_file_url: z.string()
+	file_url: z.string().optional(),
+	large_file_url: z.string().optional(),
+	preview_file_url: z.string().optional()
 });
 
 export const DanbooruPostResponseSchema = z.array(DanbooruPostSchema);
