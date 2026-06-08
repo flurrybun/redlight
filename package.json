@@ -15,7 +15,7 @@
 		"format": "prettier --write ."
 	},
 	"simple-git-hooks": {
-		"pre-commit": "npm run check && npm run lint"
+		"pre-commit": "pnpm run check && pnpm run lint"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.0.4",
