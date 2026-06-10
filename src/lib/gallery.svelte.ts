@@ -1,6 +1,7 @@
-import type { BooruId, BooruPost, BooruTag } from "$lib/server/booru/types";
+import type { BooruPost, BooruTag } from "$lib/server/booru/types";
 import { SvelteMap, SvelteSet } from "svelte/reactivity";
 import { getTagMetadata, searchPosts } from "./api/client";
+import type { BooruId } from "./api/schemas";
 import type { ApiError } from "./api/types";
 import { chunk } from "./utils/array";
 
@@ -113,7 +114,11 @@ class Gallery {
 		const batches = chunk([...missing], TAG_BATCH_SIZE);
 
 		for (const batch of batches) {
-			const result = await getTagMetadata(this.#booru, batch, TAG_BATCH_SIZE);
+			const result = await getTagMetadata({
+				booru: this.#booru,
+				names: batch,
+				limit: TAG_BATCH_SIZE
+			});
 			if (result.isErr()) continue;
 
 			result.value.forEach((tag) => booruTagMap.set(tag.name, tag));

@@ -1,9 +1,9 @@
+import type { BooruId } from "$lib/api/schemas";
 import DanbooruAdapter from "./adapters/DanbooruAdapter";
 import E621Adapter from "./adapters/E621Adapter";
 import GelbooruAdapter from "./adapters/GelbooruAdapter";
 import type BooruAdapter from "./BooruAdapter";
 import { TagCache } from "./TagCache";
-import type { BooruId } from "./types";
 
 interface BooruEntry {
 	adapter: BooruAdapter;

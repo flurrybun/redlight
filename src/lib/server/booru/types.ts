@@ -1,7 +1,5 @@
+import type { BooruId } from "$lib/api/schemas";
 import z from "zod";
-
-export const BooruIdSchema = z.enum(["gelbooru", "danbooru", "e621"]);
-export type BooruId = z.infer<typeof BooruIdSchema>;
 
 export interface BooruPost {
 	id: number;

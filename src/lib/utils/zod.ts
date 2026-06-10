@@ -9,11 +9,11 @@ import z from "zod";
  * @param mapError A function that takes a ZodError and maps it to the
  * desired error type
  */
-export function fromZod<T, E>(
-	result: ReturnType<z.ZodType["safeParse"]>,
+export function fromZod<T extends z.ZodType, E>(
+	result: z.ZodSafeParseResult<z.core.output<T>>,
 	mapError: (error: z.ZodError) => E
-): Result<T, E> {
-	if (result.success) return ok(result.data as T);
+): Result<z.core.output<T>, E> {
+	if (result.success) return ok(result.data);
 	else return err(mapError(result.error));
 }
 

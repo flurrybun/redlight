@@ -1,7 +1,7 @@
 <script lang="ts">
+	import type { BooruId } from "$lib/api/schemas";
 	import MediaViewer from "$lib/components/MediaViewer.svelte";
 	import { gallery } from "$lib/gallery.svelte";
-	import type { BooruId } from "$lib/server/booru/types";
 	import { onMount } from "svelte";
 
 	let booru = $state<BooruId>("danbooru");

@@ -1,11 +1,11 @@
 import type { ApiError } from "$lib/api/types";
 import type { BooruError } from "$lib/server/booru/types";
+import { fromZod } from "$lib/utils/zod";
 import type { RequestHandler } from "@sveltejs/kit";
 import { json } from "@sveltejs/kit";
 import type { Result } from "neverthrow";
 import z from "zod";
 import { booruErrorToApiError } from "./response";
-import { fromZod } from "$lib/utils/zod";
 
 type BooruCallback<TSchema extends z.ZodType, TData> = (
 	params: z.infer<TSchema>
@@ -60,7 +60,7 @@ export function parseSearchParams<T extends z.ZodType>(
 ): Result<z.infer<T>, ApiError> {
 	const obj = Object.fromEntries(searchParams.entries());
 
-	return fromZod(schema.safeParse(obj), (error) => ({
+	return fromZod(schema.safeDecode(obj as z.input<T>), (error) => ({
 		title: "Invalid Parameters",
 		message: z.prettifyError(error)
 	}));
