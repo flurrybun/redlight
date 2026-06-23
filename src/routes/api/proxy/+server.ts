@@ -3,8 +3,6 @@ import { error } from "@sveltejs/kit";
 import z from "zod";
 import type { RequestHandler } from "./$types";
 
-const ALLOWED_HOSTS = new Set(["gelbooru.com", "img2.gelbooru.com"]);
-
 // some headers can set cookies or alter security policies,
 // which should never be blindly forwarded.
 
@@ -42,7 +40,7 @@ export const GET: RequestHandler = async ({ url, request }) => {
 		error(400, "Only HTTPS URLs are allowed");
 	}
 
-	if (!ALLOWED_HOSTS.has(parsedUrl.hostname)) {
+	if (!isHostAllowed(parsedUrl.hostname)) {
 		error(403, `Host ${parsedUrl.hostname} is not allowed`);
 	}
 
@@ -106,3 +104,7 @@ export const GET: RequestHandler = async ({ url, request }) => {
 		headers: responseHeaders
 	});
 };
+
+function isHostAllowed(hostname: string) {
+	return hostname === "gelbooru.com" || hostname.endsWith(".gelbooru.com");
+}
