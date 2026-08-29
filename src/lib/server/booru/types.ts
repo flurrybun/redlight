@@ -28,14 +28,17 @@ export interface BooruTag {
 	implications?: string[];
 }
 
-export type TagCategory =
-	| "general"
-	| "character"
-	| "copyright"
-	| "artist"
-	| "meta"
-	| "species"
-	| "lore";
+export const TagCategorySchema = z.enum([
+	"general",
+	"character",
+	"copyright",
+	"artist",
+	"meta",
+	"species",
+	"lore"
+]);
+
+export type TagCategory = z.infer<typeof TagCategorySchema>;
 
 export interface SearchOptions {
 	tags: string[];

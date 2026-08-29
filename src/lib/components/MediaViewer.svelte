@@ -59,20 +59,20 @@
 	<div>
 		{#if displayedPost.mediaType === "image"}
 			<!-- svelte-ignore a11y_missing_attribute -->
-			<img src={displayedPost.file?.url} width="500" />
+			<img src={displayedPost.file?.url} class="mx-auto h-screen pt-8" />
 		{:else}
 			<!-- svelte-ignore a11y_media_has_caption -->
 			<video src={displayedPost.file?.url} loop playsinline controls></video>
 		{/if}
 	</div>
-	<p>
+	<!-- <p>
 		{gallery.progress.current} / {gallery.progress.loaded}{gallery.progress.hasMore ? "+" : ""}
-	</p>
-	<ul>
+	</p> -->
+	<!-- <ul>
 		{#each gallery.currentTags as tag (tag.name)}
 			<li>{tag.name}: {tag.count}</li>
 		{/each}
-	</ul>
+	</ul> -->
 {:else}
 	<div>Loading...</div>
 {/if}

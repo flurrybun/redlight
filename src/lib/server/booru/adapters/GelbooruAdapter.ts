@@ -11,6 +11,7 @@ import type {
 	SearchResult,
 	TagCategory
 } from "../types";
+import { isValidTagCategory } from "../utils";
 
 export const GelbooruPostSchema = z.object({
 	id: z.number(),
@@ -69,10 +70,22 @@ export const GelbooruTagResponseSchema = z.object({
 	tag: z.union([z.array(GelbooruTagSchema), GelbooruTagSchema, z.undefined()])
 });
 
+export const GelbooruAutocompleteSchema = z.object({
+	type: z.string(),
+	label: z.string(),
+	value: z.string(),
+	post_count: z.string(),
+	category: z.string()
+});
+
+export const GelbooruAutocompleteResponseSchema = z.array(GelbooruAutocompleteSchema);
+
 export type GelbooruPost = z.infer<typeof GelbooruPostSchema>;
 export type GelbooruPostResponse = z.infer<typeof GelbooruPostResponseSchema>;
 export type GelbooruTag = z.infer<typeof GelbooruTagSchema>;
 export type GelbooruTagResponse = z.infer<typeof GelbooruTagResponseSchema>;
+export type GelbooruAutocomplete = z.infer<typeof GelbooruAutocompleteSchema>;
+export type GelbooruAutocompleteResponse = z.infer<typeof GelbooruAutocompleteResponseSchema>;
 
 export default class GelbooruAdapter extends BooruAdapter {
 	constructor() {
@@ -141,23 +154,22 @@ export default class GelbooruAdapter extends BooruAdapter {
 
 	autocompleteTag(tag: string, limit: number): ResultAsync<BooruTag[], BooruError> {
 		const params = {
-			s: "tag",
-			name_pattern: `${tag}%`,
-			limit: String(limit),
-			orderby: "count"
+			page: "autocomplete2",
+			type: "tag_query",
+			term: tag,
+			limit: String(limit)
 		};
 
 		return this.fetch(this.info.baseUrl, params)
 			.andThen((res) => this.parseJson(res))
-			.andThen((res) => this.validate(GelbooruTagResponseSchema, res, { url: this.info.baseUrl }))
+			.andThen((res) =>
+				this.validate(GelbooruAutocompleteResponseSchema, res, { url: this.info.baseUrl })
+			)
 			.map((res) => {
-				const tag = res.tag ?? [];
-				const tags = Array.isArray(tag) ? tag : [tag];
-
-				return tags.map((tag) => ({
-					name: tag.name,
-					category: this.normalizeTagCategory(tag.type),
-					count: tag.count
+				return res.map((tag) => ({
+					name: tag.value,
+					category: isValidTagCategory(tag.category) ? tag.category : "general",
+					count: parseInt(tag.post_count)
 				}));
 			});
 	}

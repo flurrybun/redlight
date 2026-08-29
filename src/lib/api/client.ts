@@ -1,11 +1,15 @@
 import type { BooruTag, SearchResult } from "$lib/server/booru/types";
 import { errAsync, ResultAsync } from "neverthrow";
 import z from "zod";
-import { SearchParamsSchema, TagMetadataParamsSchema } from "./schemas";
+import { AutocompleteParamsSchema, SearchParamsSchema, TagMetadataParamsSchema } from "./schemas";
 import { apiResponseToResult, type ApiError, type ApiResponse } from "./types";
 
 export const searchPosts = createFetcher<SearchResult>("/api/search", SearchParamsSchema);
 export const getTagMetadata = createFetcher<BooruTag[]>("/api/tags", TagMetadataParamsSchema);
+export const autocompleteTag = createFetcher<BooruTag[]>(
+	"/api/autocomplete",
+	AutocompleteParamsSchema
+);
 
 /**
  * Creates a function that fetches data from the given URL with query parameters

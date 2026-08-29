@@ -41,7 +41,9 @@
 		"vite": "^8.0.7"
 	},
 	"dependencies": {
+		"bits-ui": "^2.19.0",
 		"neverthrow": "^8.2.0",
+		"runed": "^0.37.1",
 		"zod": "^4.4.3"
 	}
 }
