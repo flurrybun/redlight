@@ -28,7 +28,7 @@ export default abstract class BooruAdapter {
 			fetch(fullUrl, {
 				headers: {
 					Accept: "application/json",
-					"User-Agent": "flurrybun · bun.garden",
+					"User-Agent": "redlight/1.0 (flurrybun)",
 					...this.info.baseHeaders
 				}
 			}),
