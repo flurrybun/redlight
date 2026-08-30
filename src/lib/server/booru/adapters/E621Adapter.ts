@@ -1,3 +1,4 @@
+import { E621_API_KEY, E621_LOGIN } from "$env/static/private";
 import { getExtensionType } from "$lib/utils/media";
 import type { ResultAsync } from "neverthrow";
 import z from "zod";
@@ -113,8 +114,8 @@ export default class E621Adapter extends BooruAdapter {
 				maxLimit: 100
 			},
 			{
-				// login: E621_USERNAME,
-				// api_key: E621_API_KEY,
+				login: E621_LOGIN,
+				api_key: E621_API_KEY
 			}
 		);
 	}

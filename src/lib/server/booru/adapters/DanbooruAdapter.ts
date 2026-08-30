@@ -1,3 +1,4 @@
+import { DANBOORU_API_KEY, DANBOORU_LOGIN } from "$env/static/private";
 import { getExtensionType } from "$lib/utils/media";
 import type { ResultAsync } from "neverthrow";
 import z from "zod";
@@ -110,8 +111,8 @@ export default class DanbooruAdapter extends BooruAdapter {
 				maxLimit: 100
 			},
 			{
-				// login: DANBOORU_USERNAME,
-				// api_key: DANBOORU_API_KEY,
+				login: DANBOORU_LOGIN,
+				api_key: DANBOORU_API_KEY
 			}
 		);
 	}
