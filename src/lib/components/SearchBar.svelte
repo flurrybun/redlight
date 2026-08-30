@@ -118,7 +118,7 @@
 						class="px-2 py-1 outline-hidden select-none data-highlighted:bg-gray-800"
 						value={tag.name}
 					>
-						{tag.name}
+						{tag.antecedent ? `${tag.antecedent} → ${tag.name}` : tag.name}
 						<span class="text-sm text-gray-400">{formatNumberCompact(tag.count)}</span>
 					</Combobox.Item>
 				{/each}

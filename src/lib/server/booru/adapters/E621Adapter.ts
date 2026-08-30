@@ -1,6 +1,6 @@
 import { E621_API_KEY, E621_LOGIN } from "$env/static/private";
 import { getExtensionType } from "$lib/utils/media";
-import type { ResultAsync } from "neverthrow";
+import { okAsync, type ResultAsync } from "neverthrow";
 import z from "zod";
 import BooruAdapter from "../BooruAdapter";
 import type {
@@ -98,10 +98,22 @@ export const E621TagResponseSchema = z.union([
 	})
 ]);
 
+export const E621AutocompleteSchema = z.object({
+	id: z.number(),
+	name: z.string(),
+	post_count: z.number(),
+	category: z.number(),
+	antecedent_name: z.nullable(z.string())
+});
+
+export const E621AutocompleteResponseSchema = z.array(E621AutocompleteSchema);
+
 export type E621Post = z.infer<typeof E621PostSchema>;
 export type E621PostResponse = z.infer<typeof E621PostResponseSchema>;
 export type E621Tag = z.infer<typeof E621TagSchema>;
 export type E621TagResponse = z.infer<typeof E621TagResponseSchema>;
+export type E621Autocomplete = z.infer<typeof E621AutocompleteSchema>;
+export type E621AutocompleteResponse = z.infer<typeof E621AutocompleteResponseSchema>;
 
 export default class E621Adapter extends BooruAdapter {
 	constructor() {
@@ -152,18 +164,28 @@ export default class E621Adapter extends BooruAdapter {
 			.map((res) => this.normalizeTags(res));
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	autocompleteTag(tag: string, limit: number): ResultAsync<BooruTag[], BooruError> {
-		const url = `${this.info.baseUrl}/tags.json`;
+		// e621 throws an error if the length is too short
+		if (tag.length <= 2) return okAsync([]);
+
+		const url = `${this.info.baseUrl}/tags/autocomplete.json`;
 		const params = {
-			"search[fuzzy_name_matches]": tag,
-			"search[order]": "similarity",
-			limit: String(limit)
+			"search[name_matches]": tag
+			// limit = 10, cannot be changed
 		};
 
 		return this.fetch(url, params)
 			.andThen((res) => this.parseJson(res))
-			.andThen((res) => this.validate(E621TagResponseSchema, res, { url }))
-			.map((res) => this.normalizeTags(res));
+			.andThen((res) => this.validate(E621AutocompleteResponseSchema, res, { url }))
+			.map((res) =>
+				res.map((tag) => ({
+					name: tag.name,
+					antecedent: tag.antecedent_name ?? undefined,
+					category: this.normalizeTagCategory(tag.category),
+					count: tag.post_count
+				}))
+			);
 	}
 
 	private normalizePosts(posts: E621Post[]): BooruPost[] {
@@ -209,15 +231,11 @@ export default class E621Adapter extends BooruAdapter {
 	private normalizeTags(tags: E621TagResponse): BooruTag[] {
 		if (!Array.isArray(tags)) return [];
 
-		return tags.map((tag) => this.normalizeTag(tag));
-	}
-
-	private normalizeTag(tag: E621Tag): BooruTag {
-		return {
+		return tags.map((tag) => ({
 			name: tag.name,
 			category: this.normalizeTagCategory(tag.category),
 			count: tag.post_count
-		};
+		}));
 	}
 
 	private normalizeTagCategory(category: E621Tag["category"]): TagCategory {

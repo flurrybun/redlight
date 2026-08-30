@@ -95,10 +95,24 @@ export const DanbooruTagSchema = z.object({
 
 export const DanbooruTagResponseSchema = z.array(DanbooruTagSchema);
 
+export const DanbooruAutocompleteSchema = z.object({
+	type: z.string(),
+	label: z.string(),
+	value: z.string(),
+	category: z.number(),
+	post_count: z.number(),
+	antecedent: z.string().optional(),
+	tag: DanbooruTagSchema
+});
+
+export const DanbooruAutocompleteResponseSchema = z.array(DanbooruAutocompleteSchema);
+
 export type DanbooruPost = z.infer<typeof DanbooruPostSchema>;
 export type DanbooruPostResponse = z.infer<typeof DanbooruPostResponseSchema>;
 export type DanbooruTag = z.infer<typeof DanbooruTagSchema>;
 export type DanbooruTagResponse = z.infer<typeof DanbooruTagResponseSchema>;
+export type DanbooruAutocomplete = z.infer<typeof DanbooruAutocompleteSchema>;
+export type DanbooruAutocompleteResponse = z.infer<typeof DanbooruAutocompleteResponseSchema>;
 
 export default class DanbooruAdapter extends BooruAdapter {
 	constructor() {
@@ -146,21 +160,34 @@ export default class DanbooruAdapter extends BooruAdapter {
 		return this.fetch(url, params)
 			.andThen((res) => this.parseJson(res))
 			.andThen((res) => this.validate(DanbooruTagResponseSchema, res, { url }))
-			.map((res) => this.normalizeTags(res));
+			.map((res) =>
+				res.map((tag) => ({
+					name: tag.name,
+					category: this.normalizeTagCategory(tag.category),
+					count: tag.post_count
+				}))
+			);
 	}
 
 	autocompleteTag(tag: string, limit: number): ResultAsync<BooruTag[], BooruError> {
-		const url = `${this.info.baseUrl}/tags.json`;
+		const url = `${this.info.baseUrl}/autocomplete`;
 		const params = {
-			"search[fuzzy_name_matches]": tag,
-			"search[order]": "similarity",
+			"search[query]": tag,
+			"search[type]": "tag_query",
 			limit: String(limit)
 		};
 
 		return this.fetch(url, params)
 			.andThen((res) => this.parseJson(res))
-			.andThen((res) => this.validate(DanbooruTagResponseSchema, res, { url }))
-			.map((res) => this.normalizeTags(res));
+			.andThen((res) => this.validate(DanbooruAutocompleteResponseSchema, res, { url }))
+			.map((res) =>
+				res.map((ac) => ({
+					name: ac.tag.name,
+					antecedent: ac.antecedent,
+					category: this.normalizeTagCategory(ac.tag.category),
+					count: ac.tag.post_count
+				}))
+			);
 	}
 
 	private normalizePosts(posts: DanbooruPost[]): BooruPost[] {
@@ -195,18 +222,6 @@ export default class DanbooruAdapter extends BooruAdapter {
 			rating: this.normalizeRating(raw.rating),
 			score: raw.score,
 			createdAt: new Date(raw.created_at)
-		};
-	}
-
-	private normalizeTags(tags: DanbooruTag[]): BooruTag[] {
-		return tags.map((tag) => this.normalizeTag(tag));
-	}
-
-	private normalizeTag(tag: DanbooruTag): BooruTag {
-		return {
-			name: tag.name,
-			category: this.normalizeTagCategory(tag.category),
-			count: tag.post_count
 		};
 	}
 

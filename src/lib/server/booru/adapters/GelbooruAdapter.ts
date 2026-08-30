@@ -165,13 +165,13 @@ export default class GelbooruAdapter extends BooruAdapter {
 			.andThen((res) =>
 				this.validate(GelbooruAutocompleteResponseSchema, res, { url: this.info.baseUrl })
 			)
-			.map((res) => {
-				return res.map((tag) => ({
+			.map((res) =>
+				res.map((tag) => ({
 					name: tag.value,
 					category: isValidTagCategory(tag.category) ? tag.category : "general",
 					count: parseInt(tag.post_count)
-				}));
-			});
+				}))
+			);
 	}
 
 	private normalizePosts(post: GelbooruPost[] | GelbooruPost | undefined): BooruPost[] {

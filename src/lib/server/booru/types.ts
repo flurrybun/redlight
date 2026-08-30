@@ -22,10 +22,9 @@ export interface BooruAsset {
 
 export interface BooruTag {
 	name: string;
+	antecedent?: string;
 	category: TagCategory;
 	count: number;
-	aliases?: string[];
-	implications?: string[];
 }
 
 export const TagCategorySchema = z.enum([
