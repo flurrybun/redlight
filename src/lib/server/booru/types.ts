@@ -55,6 +55,7 @@ export interface BooruInfo {
 	id: BooruId;
 	name: string;
 	baseUrl: string;
+	username?: string;
 	baseParams?: Record<string, string>;
 	baseHeaders?: Record<string, string>;
 }

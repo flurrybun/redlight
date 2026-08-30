@@ -120,6 +120,7 @@ export default class DanbooruAdapter extends BooruAdapter {
 			id: "danbooru",
 			name: "Danbooru",
 			baseUrl: "https://danbooru.donmai.us",
+			username: DANBOORU_LOGIN,
 			baseParams: {
 				login: DANBOORU_LOGIN,
 				api_key: DANBOORU_API_KEY

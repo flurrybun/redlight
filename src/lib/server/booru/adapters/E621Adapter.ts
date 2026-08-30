@@ -119,8 +119,9 @@ export default class E621Adapter extends BooruAdapter {
 	constructor() {
 		super({
 			id: "e621",
-			name: "E621",
+			name: "e621",
 			baseUrl: "https://e621.net",
+			username: E621_LOGIN,
 			baseParams: {
 				login: E621_LOGIN,
 				api_key: E621_API_KEY

@@ -28,7 +28,7 @@ export default abstract class BooruAdapter {
 			fetch(fullUrl, {
 				headers: {
 					Accept: "application/json",
-					"User-Agent": "redlight/1.0 (flurrybun)",
+					"User-Agent": this.#formatUserAgent(),
 					...this.info.baseHeaders
 				}
 			}),
@@ -87,5 +87,14 @@ export default abstract class BooruAdapter {
 				tags: [...new Set(post.tags)]
 			}))
 		};
+	}
+
+	#formatUserAgent(): string {
+		// danbooru/e621 are very particular about the user agent string
+		// they'll throw a 403 if it doesn't match a specific format
+
+		return this.info.username
+			? `Redlight/1.0 (by ${this.info.username} on ${this.info.name}, flurrybun on GitHub)`
+			: "Redlight/1.0 (by flurrybun on GitHub)";
 	}
 }
