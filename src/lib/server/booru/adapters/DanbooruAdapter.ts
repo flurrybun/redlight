@@ -116,19 +116,15 @@ export type DanbooruAutocompleteResponse = z.infer<typeof DanbooruAutocompleteRe
 
 export default class DanbooruAdapter extends BooruAdapter {
 	constructor() {
-		super(
-			{
-				id: "danbooru",
-				name: "Danbooru",
-				baseUrl: "https://danbooru.donmai.us",
-				supportsMultipleTags: true,
-				maxLimit: 100
-			},
-			{
+		super({
+			id: "danbooru",
+			name: "Danbooru",
+			baseUrl: "https://danbooru.donmai.us",
+			baseParams: {
 				login: DANBOORU_LOGIN,
 				api_key: DANBOORU_API_KEY
 			}
-		);
+		});
 	}
 
 	search(options: SearchOptions): ResultAsync<SearchResult, BooruError> {

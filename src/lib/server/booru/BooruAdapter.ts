@@ -7,12 +7,10 @@ import type { BooruError, BooruInfo, BooruTag, SearchOptions, SearchResult } fro
 export default abstract class BooruAdapter {
 	protected info: BooruInfo;
 	protected errors: BooruErrorFactory;
-	protected defaultParams: Record<string, string>;
 
-	constructor(info: BooruInfo, defaultParams: Record<string, string> = {}) {
+	constructor(info: BooruInfo) {
 		this.info = info;
 		this.errors = new BooruErrorFactory(info);
-		this.defaultParams = defaultParams;
 	}
 
 	abstract search(options: SearchOptions): ResultAsync<SearchResult, BooruError>;
@@ -23,12 +21,16 @@ export default abstract class BooruAdapter {
 		url: string,
 		params: Record<string, string> = {}
 	): ResultAsync<Response, BooruError> {
-		const merged = { ...this.defaultParams, ...params };
+		const merged = { ...this.info.baseParams, ...params };
 		const fullUrl = `${url}?${new URLSearchParams(merged)}`;
 
 		return ResultAsync.fromPromise(
 			fetch(fullUrl, {
-				headers: { Accept: "application/json", "User-Agent": "flurrybun · bun.garden" }
+				headers: {
+					Accept: "application/json",
+					"User-Agent": "flurrybun · bun.garden",
+					...this.info.baseHeaders
+				}
 			}),
 			() => this.errors.network()
 		)

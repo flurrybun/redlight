@@ -89,22 +89,21 @@ export type GelbooruAutocompleteResponse = z.infer<typeof GelbooruAutocompleteRe
 
 export default class GelbooruAdapter extends BooruAdapter {
 	constructor() {
-		super(
-			{
-				id: "gelbooru",
-				name: "Gelbooru",
-				baseUrl: "https://gelbooru.com/index.php",
-				supportsMultipleTags: true,
-				maxLimit: 100
-			},
-			{
+		super({
+			id: "gelbooru",
+			name: "Gelbooru",
+			baseUrl: "https://gelbooru.com/index.php",
+			baseParams: {
 				user_id: GELBOORU_USER_ID,
 				api_key: GELBOORU_API_KEY,
 				page: "dapi",
 				q: "index",
 				json: "1"
+			},
+			baseHeaders: {
+				Cookie: "fringeBenefits=yup"
 			}
-		);
+		});
 	}
 
 	search(options: SearchOptions): ResultAsync<SearchResult, BooruError> {

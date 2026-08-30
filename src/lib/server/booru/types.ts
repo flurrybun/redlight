@@ -55,8 +55,8 @@ export interface BooruInfo {
 	id: BooruId;
 	name: string;
 	baseUrl: string;
-	supportsMultipleTags: boolean;
-	maxLimit: number;
+	baseParams?: Record<string, string>;
+	baseHeaders?: Record<string, string>;
 }
 
 export type BooruErrorDetail =

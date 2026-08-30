@@ -117,19 +117,15 @@ export type E621AutocompleteResponse = z.infer<typeof E621AutocompleteResponseSc
 
 export default class E621Adapter extends BooruAdapter {
 	constructor() {
-		super(
-			{
-				id: "e621",
-				name: "E621",
-				baseUrl: "https://e621.net",
-				supportsMultipleTags: true,
-				maxLimit: 100
-			},
-			{
+		super({
+			id: "e621",
+			name: "E621",
+			baseUrl: "https://e621.net",
+			baseParams: {
 				login: E621_LOGIN,
 				api_key: E621_API_KEY
 			}
-		);
+		});
 	}
 
 	search(options: SearchOptions): ResultAsync<SearchResult, BooruError> {
