@@ -5,65 +5,33 @@ import type { BooruId } from "./api/schemas";
 import type { ApiError } from "./api/types";
 import { chunk } from "./utils/array";
 
-const PREFETCH_THRESHOLD = 5;
 const TAG_BATCH_SIZE = 250;
 
 class Gallery {
 	posts = $state<BooruPost[]>([]);
 	booru = $state<BooruId>("danbooru");
-	currentIndex = $state(0);
 	isLoading = $state(false);
 	hasMore = $state(true);
 	error = $state<ApiError | undefined>(undefined);
+	inGallery = $state(false);
 
 	tagMap = $state(new SvelteMap<BooruId, SvelteMap<string, BooruTag>>());
 
 	#tags: string[] = [];
 	#currentPage = 1;
 
-	currentPost = $derived(this.posts.at(this.currentIndex));
-
-	progress = $derived({
-		current: this.currentIndex + 1,
-		loaded: this.posts.length,
-		hasMore: this.hasMore
-	});
-
-	currentTags = $derived(
-		this.currentPost?.tags
-			.map((name) => this.tagMap.get(this.booru)?.get(name))
-			.filter((tag) => tag !== undefined) ?? []
-	);
-
 	async search(tags: string[]) {
 		this.posts = [];
-		this.currentIndex = 0;
 		this.hasMore = true;
 		this.error = undefined;
 
 		this.#tags = tags;
 		this.#currentPage = 1;
 
-		await this.#fetchNextPage();
+		await this.fetchNextPage();
 	}
 
-	async next() {
-		const nextIndex = this.currentIndex + 1;
-		if (nextIndex >= this.posts.length && !this.hasMore) return;
-
-		this.currentIndex = nextIndex;
-		const postsRemaining = this.posts.length - nextIndex;
-
-		if (postsRemaining <= PREFETCH_THRESHOLD) {
-			await this.#fetchNextPage();
-		}
-	}
-
-	previous() {
-		this.currentIndex = Math.max(0, this.currentIndex - 1);
-	}
-
-	async #fetchNextPage() {
+	async fetchNextPage() {
 		if (this.isLoading || !this.hasMore) return;
 
 		this.isLoading = true;

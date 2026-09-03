@@ -17,3 +17,17 @@ export function chunk<T>(array: T[], size: number): T[][] {
 		array.slice(i * size, i * size + size)
 	);
 }
+
+export function indexOfMin(arr: number[]): number {
+	if (arr.length === 0) return -1;
+
+	let minIndex = 0;
+
+	for (let i = 1; i < arr.length; i++) {
+		if (arr[i] < arr[minIndex]) {
+			minIndex = i;
+		}
+	}
+
+	return minIndex;
+}

@@ -1,15 +1,17 @@
 <script lang="ts">
 	import { gallery } from "$lib/gallery.svelte";
-	import type { BooruPost } from "$lib/server/booru/types";
 	import { SvelteMap } from "svelte/reactivity";
+	import LoadingSpinner from "./LoadingSpinner.svelte";
+	import MediaViewerState from "./MediaViewerState.svelte";
 
-	let { post }: { post: BooruPost } = $props();
+	const state = new MediaViewerState();
+	let post = $derived(state.currentPost);
 
 	const preloadCache = new SvelteMap<string, HTMLImageElement>();
 	const PRELOAD_COUNT = 5;
 
 	let displayedPost = $derived.by(() => {
-		if (!post.file) return undefined;
+		if (!post?.file) return undefined;
 
 		if (post.mediaType === "video") return post;
 
@@ -36,8 +38,8 @@
 
 	$effect(() => {
 		const upcomingPosts = gallery.posts.slice(
-			gallery.currentIndex + 1,
-			gallery.currentIndex + 1 + PRELOAD_COUNT
+			state.currentIndex + 1,
+			state.currentIndex + 1 + PRELOAD_COUNT
 		);
 
 		upcomingPosts.forEach((post) => {
@@ -53,7 +55,15 @@
 			img.src = post.file.url;
 		});
 	});
+
+	const handleKeydown = (event: KeyboardEvent) => {
+		if (event.key === "ArrowRight") void state.next();
+		if (event.key === "ArrowLeft") state.previous();
+		if (event.key === "Escape") gallery.inGallery = false;
+	};
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 {#if displayedPost}
 	<div>
@@ -65,14 +75,6 @@
 			<video src={displayedPost.file?.url} loop playsinline controls></video>
 		{/if}
 	</div>
-	<!-- <p>
-		{gallery.progress.current} / {gallery.progress.loaded}{gallery.progress.hasMore ? "+" : ""}
-	</p> -->
-	<!-- <ul>
-		{#each gallery.currentTags as tag (tag.name)}
-			<li>{tag.name}: {tag.count}</li>
-		{/each}
-	</ul> -->
 {:else}
-	<div>Loading...</div>
+	<LoadingSpinner />
 {/if}

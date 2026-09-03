@@ -1,5 +1,6 @@
 <script lang="ts">
 	import MediaViewer from "$lib/components/MediaViewer.svelte";
+	import PostList from "$lib/components/PostList.svelte";
 	import SearchBar from "$lib/components/SearchBar.svelte";
 	import { gallery } from "$lib/gallery.svelte";
 	import { onMount } from "svelte";
@@ -8,11 +9,6 @@
 	let tags = new SvelteSet<string>();
 
 	onMount(() => gallery.search([...tags]));
-
-	const handleKeydown = (event: KeyboardEvent) => {
-		if (event.key === "ArrowRight") void gallery.next();
-		if (event.key === "ArrowLeft") gallery.previous();
-	};
 </script>
 
 <svelte:head>
@@ -20,11 +16,9 @@
 	<meta name="description" content="Booru browser" />
 </svelte:head>
 
-<svelte:window onkeydown={handleKeydown} />
-
 <section class="p-4">
 	<form
-		class="mx-auto w-200"
+		class="mx-auto mt-10 mb-12 w-200"
 		onsubmit={(event) => {
 			event.preventDefault();
 			void gallery.search([...tags]);
@@ -45,7 +39,9 @@
 		</fieldset>
 	</form>
 
-	{#if gallery.currentPost}
-		<MediaViewer post={gallery.currentPost} />
+	{#if gallery.inGallery}
+		<MediaViewer />
+	{:else}
+		<PostList />
 	{/if}
 </section>

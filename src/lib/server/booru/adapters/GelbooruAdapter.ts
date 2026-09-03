@@ -189,11 +189,18 @@ export default class GelbooruAdapter extends BooruAdapter {
 				width: raw.width,
 				height: raw.height
 			},
-			preview: {
-				url: this.proxyUrl(raw.preview_url),
-				width: raw.preview_width,
-				height: raw.preview_height
-			},
+			preview:
+				raw.sample === 1
+					? {
+							url: this.proxyUrl(raw.sample_url),
+							width: raw.sample_width,
+							height: raw.sample_height
+						}
+					: {
+							url: this.proxyUrl(raw.preview_url),
+							width: raw.preview_width,
+							height: raw.preview_height
+						},
 			mediaType: getFileType(raw.file_url),
 			tags: raw.tags.split(" ").filter(Boolean),
 			rating: this.normalizeRating(raw.rating),
