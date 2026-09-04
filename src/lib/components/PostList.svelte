@@ -22,7 +22,7 @@
 		if (!post.preview) return columnWidth;
 
 		const { width, height } = post.preview;
-		return (height * columnWidth) / width;
+		return Math.min((height * columnWidth) / width, 1000);
 	}
 
 	let { items, contentHeight } = $derived.by(() => {
