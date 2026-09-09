@@ -3,8 +3,12 @@
 	import PostList from "$lib/components/PostList.svelte";
 	import SearchBar from "$lib/components/SearchBar.svelte";
 	import { gallery } from "$lib/gallery.svelte";
+	import { ElementSize } from "runed";
 	import { onMount } from "svelte";
 	import { SvelteSet } from "svelte/reactivity";
+
+	let header = $state<HTMLElement>();
+	const size = new ElementSize(() => header);
 
 	let tags = new SvelteSet<string>();
 
@@ -16,13 +20,14 @@
 	<meta name="description" content="Booru browser" />
 </svelte:head>
 
-<section class="p-4">
+<section>
 	<form
-		class="mx-auto mt-10 mb-12 w-200"
+		class="mx-auto w-200 pt-10 pb-12"
 		onsubmit={(event) => {
 			event.preventDefault();
 			void gallery.search([...tags]);
 		}}
+		bind:this={header}
 	>
 		<div class="flex items-center gap-2">
 			<SearchBar {tags} />
@@ -42,6 +47,6 @@
 	{#if gallery.inGallery}
 		<MediaViewer />
 	{:else}
-		<PostList />
+		<PostList top={size.height} />
 	{/if}
 </section>
