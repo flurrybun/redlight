@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ErrorCard from "$lib/components/ErrorCard.svelte";
 	import MediaViewer from "$lib/components/MediaViewer.svelte";
 	import PostList from "$lib/components/PostList.svelte";
 	import SearchBar from "$lib/components/SearchBar.svelte";
@@ -44,7 +45,9 @@
 		</fieldset>
 	</form>
 
-	{#if gallery.inGallery}
+	{#if gallery.error}
+		<ErrorCard error={gallery.error} />
+	{:else if gallery.inGallery}
 		<MediaViewer />
 	{:else}
 		<PostList top={size.height} />
