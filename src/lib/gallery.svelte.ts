@@ -3,7 +3,7 @@ import { SvelteMap, SvelteSet } from "svelte/reactivity";
 import { getTagMetadata, searchPosts } from "./api/client";
 import type { BooruId } from "./api/schemas";
 import type { ApiError } from "./api/types";
-import { chunk } from "./utils/array";
+import { chunk, uniqBy } from "./utils/array";
 
 const TAG_BATCH_SIZE = 250;
 
@@ -46,7 +46,7 @@ class Gallery {
 
 		await result.match(
 			async (data) => {
-				this.posts = [...this.posts, ...data.posts];
+				this.posts = uniqBy([...this.posts, ...data.posts], (post) => post.id);
 				this.hasMore = data.posts.length === 20;
 				this.#currentPage += 1;
 				this.isLoading = false;
