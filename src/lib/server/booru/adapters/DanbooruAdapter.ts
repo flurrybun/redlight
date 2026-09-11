@@ -11,6 +11,7 @@ import type {
 	SearchResult,
 	TagCategory
 } from "../types";
+import { getPreviewAsset } from "../utils";
 
 export const DanbooruPostSchema = z.object({
 	id: z.number(),
@@ -195,7 +196,6 @@ export default class DanbooruAdapter extends BooruAdapter {
 		const assets = (raw.media_asset.variants ?? []).toSorted((a, b) => b.width - a.width);
 
 		const fileAsset = assets.at(0);
-		const previewAsset = assets.at(1);
 
 		return {
 			id: raw.id,
@@ -207,13 +207,7 @@ export default class DanbooruAdapter extends BooruAdapter {
 						height: fileAsset.height
 					}
 				: undefined,
-			preview: previewAsset
-				? {
-						url: previewAsset.url,
-						width: previewAsset.width,
-						height: previewAsset.height
-					}
-				: undefined,
+			preview: getPreviewAsset(assets.map(({ url, width, height }) => ({ url, width, height }))),
 			mediaType: getExtensionType(raw.media_asset.file_ext),
 			tags: raw.tag_string.split(" ").filter(Boolean),
 			rating: this.normalizeRating(raw.rating),

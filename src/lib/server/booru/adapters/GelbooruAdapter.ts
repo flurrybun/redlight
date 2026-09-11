@@ -11,7 +11,7 @@ import type {
 	SearchResult,
 	TagCategory
 } from "../types";
-import { isValidTagCategory } from "../utils";
+import { getPreviewAsset, isValidTagCategory } from "../utils";
 
 export const GelbooruPostSchema = z.object({
 	id: z.number(),
@@ -189,18 +189,23 @@ export default class GelbooruAdapter extends BooruAdapter {
 				width: raw.width,
 				height: raw.height
 			},
-			preview:
-				raw.sample === 1
-					? {
-							url: this.proxyUrl(raw.sample_url),
-							width: raw.sample_width,
-							height: raw.sample_height
-						}
-					: {
-							url: this.proxyUrl(raw.preview_url),
-							width: raw.preview_width,
-							height: raw.preview_height
-						},
+			preview: getPreviewAsset([
+				{
+					url: this.proxyUrl(raw.file_url),
+					width: raw.width,
+					height: raw.height
+				},
+				{
+					url: this.proxyUrl(raw.sample_url),
+					width: raw.sample_width,
+					height: raw.sample_height
+				},
+				{
+					url: this.proxyUrl(raw.preview_url),
+					width: raw.preview_width,
+					height: raw.preview_height
+				}
+			]),
 			mediaType: getFileType(raw.file_url),
 			tags: raw.tags.split(" ").filter(Boolean),
 			rating: this.normalizeRating(raw.rating),

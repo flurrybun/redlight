@@ -4,6 +4,7 @@ import { okAsync, type ResultAsync } from "neverthrow";
 import z from "zod";
 import BooruAdapter from "../BooruAdapter";
 import type {
+	BooruAsset,
 	BooruError,
 	BooruPost,
 	BooruTag,
@@ -11,6 +12,7 @@ import type {
 	SearchResult,
 	TagCategory
 } from "../types";
+import { getPreviewAsset } from "../utils";
 
 export const E621PostSchema = z.object({
 	id: z.number(),
@@ -200,13 +202,7 @@ export default class E621Adapter extends BooruAdapter {
 						height: raw.file.height
 					}
 				: undefined,
-			preview: raw.preview.alt
-				? {
-						url: raw.preview.alt,
-						width: raw.preview.width,
-						height: raw.preview.height
-					}
-				: undefined,
+			preview: getPreviewAsset(this.getAssets(raw)),
 			mediaType: getExtensionType(raw.file.ext),
 			tags: [
 				...raw.tags.general,
@@ -223,6 +219,39 @@ export default class E621Adapter extends BooruAdapter {
 			score: raw.score.total,
 			createdAt: new Date(raw.created_at)
 		};
+	}
+
+	private getAssets(raw: E621Post): BooruAsset[] {
+		const assets: BooruAsset[] = [];
+
+		const previewUrl = raw.preview.alt ?? raw.preview.url;
+		const sampleUrl = raw.sample.alt ?? raw.sample.url;
+
+		if (raw.file.url) {
+			assets.push({
+				url: raw.file.url,
+				width: raw.file.width,
+				height: raw.file.height
+			});
+		}
+
+		if (previewUrl) {
+			assets.push({
+				url: previewUrl,
+				width: raw.preview.width,
+				height: raw.preview.height
+			});
+		}
+
+		if (sampleUrl) {
+			assets.push({
+				url: sampleUrl,
+				width: raw.sample.width,
+				height: raw.sample.height
+			});
+		}
+
+		return assets;
 	}
 
 	private normalizeTags(tags: E621TagResponse): BooruTag[] {
