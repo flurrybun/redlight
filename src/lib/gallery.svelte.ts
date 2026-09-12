@@ -1,4 +1,5 @@
 import type { BooruPost, BooruTag } from "$lib/server/booru/types";
+import { tick } from "svelte";
 import { SvelteMap, SvelteSet } from "svelte/reactivity";
 import { getTagMetadata, searchPosts } from "./api/client";
 import type { BooruId } from "./api/schemas";
@@ -13,7 +14,10 @@ class Gallery {
 	isLoading = $state(false);
 	hasMore = $state(true);
 	error = $state<ApiError | undefined>(undefined);
-	inGallery = $state(false);
+
+	isSlideshowOpen = $state(false);
+	slideshowState = $state<"open" | "closed" | "opening" | "closing">("closed");
+	slideshowIndex = $state(-1);
 
 	tagMap = $state(new SvelteMap<BooruId, SvelteMap<string, BooruTag>>());
 
@@ -60,6 +64,36 @@ class Gallery {
 		);
 	}
 
+	openSlideshow(post: BooruPost) {
+		this.slideshowIndex = Math.max(
+			this.posts.findIndex((p) => p.id === post.id),
+			0
+		);
+		this.slideshowState = "opening";
+
+		this.#changeView(
+			() => {
+				this.isSlideshowOpen = true;
+			},
+			() => {
+				this.slideshowState = "open";
+			}
+		);
+	}
+
+	closeSlideshow() {
+		this.slideshowState = "closing";
+
+		this.#changeView(
+			() => {
+				this.isSlideshowOpen = false;
+			},
+			() => {
+				this.slideshowState = "closed";
+			}
+		);
+	}
+
 	async #prefetchTags(posts: BooruPost[]) {
 		if (!this.tagMap.has(this.booru)) {
 			this.tagMap.set(this.booru, new SvelteMap());
@@ -90,6 +124,17 @@ class Gallery {
 
 			result.value.forEach((tag) => booruTagMap.set(tag.name, tag));
 		}
+	}
+
+	#changeView(before: () => void, after: () => void) {
+		const transition = document.startViewTransition(async () => {
+			before();
+			await tick();
+		});
+
+		void transition.finished.then(() => {
+			after();
+		});
 	}
 }
 

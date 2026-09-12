@@ -4,6 +4,7 @@
 	import { indexOfMin } from "$lib/utils/array";
 	import Play from "@lucide/svelte/icons/play";
 	import { ElementSize, useIntersectionObserver } from "runed";
+	import { onMount, tick } from "svelte";
 	import LoadingSpinner from "./LoadingSpinner.svelte";
 
 	let {
@@ -44,7 +45,7 @@
 		const columnHeights = Array<number>(columns).fill(0);
 		let contentHeight = 0;
 
-		const items = gallery.posts.map((post) => {
+		const items = gallery.posts.map((post, index) => {
 			const column = indexOfMin(columnHeights);
 			const height = getPostHeight(post);
 			const top = columnHeights[column];
@@ -55,6 +56,7 @@
 			contentHeight = Math.max(contentHeight, top + height);
 
 			return {
+				index,
 				post,
 				column,
 				top,
@@ -67,6 +69,9 @@
 	});
 
 	let visibleItems = $derived.by(() => {
+		const slideshowIdx = gallery.slideshowIndex;
+		const slideshowItem = slideshowIdx >= 0 ? items.at(slideshowIdx) : undefined;
+
 		let startIdx: number | undefined = undefined;
 
 		for (let i = 0; i < items.length; i++) {
@@ -75,11 +80,26 @@
 			if (startIdx === undefined) {
 				if (item.top + item.height >= windowTop) startIdx = i;
 			} else {
-				if (item.top > windowBottom) return items.slice(startIdx, i);
+				if (item.top > windowBottom) {
+					const ret = items.slice(startIdx, i);
+
+					if (slideshowItem && (slideshowIdx < startIdx || slideshowIdx >= i)) {
+						ret.push(slideshowItem);
+					}
+
+					return ret;
+				}
 			}
 		}
 
-		return items.slice(startIdx);
+		startIdx = startIdx ?? 0;
+		const ret = items.slice(startIdx);
+
+		if (slideshowItem && slideshowIdx < startIdx) {
+			ret.push(slideshowItem);
+		}
+
+		return ret;
 	});
 
 	useIntersectionObserver(
@@ -91,6 +111,20 @@
 			void gallery.fetchNextPage();
 		}
 	);
+
+	onMount(async () => {
+		if (gallery.slideshowIndex === -1) return;
+
+		await tick();
+
+		const item = items.at(gallery.slideshowIndex);
+		if (!item) return;
+
+		window.scrollTo({
+			top: Math.max(top + item.top + item.height / 2 - viewportHeight / 2, 0),
+			behavior: "instant"
+		});
+	});
 </script>
 
 <svelte:window bind:innerHeight={viewportHeight} bind:scrollY />
@@ -108,7 +142,10 @@
 			style:width="{columnWidth}px"
 			style:height="{item.height}px"
 			style:background-image="url('{item.post.preview?.url}')"
-			onclick={() => (gallery.inGallery = true)}
+			style:view-transition-name={item.index === gallery.slideshowIndex ? "post" : undefined}
+			onclick={() => {
+				gallery.openSlideshow(item.post);
+			}}
 		>
 			{#if item.post.mediaType === "video"}
 				<div class="absolute inset-0 place-self-center rounded-full bg-black/50 p-2">
