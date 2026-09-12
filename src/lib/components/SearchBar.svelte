@@ -1,11 +1,13 @@
 <script lang="ts">
-	import { autocompleteTag } from "$lib/api/client";
-	import { gallery } from "$lib/gallery.svelte";
-	import type { BooruTag } from "$lib/server/booru/types";
 	import { formatNumberCompact } from "$lib/utils/intl";
 	import { Combobox } from "bits-ui";
-	import { useThrottle } from "runed";
+	import { ElementSize, useThrottle } from "runed";
 	import type { SvelteSet } from "svelte/reactivity";
+	import {
+		type AutocompleteTag,
+		autocompleteTagsForQuery,
+		shouldThrottleQuery
+	} from "./SearchBarState.svelte";
 
 	let {
 		tags
@@ -14,24 +16,59 @@
 	} = $props();
 
 	let query = $state("");
-	let autocompleteTags = $state<BooruTag[]>([]);
+	let isOpen = $state<boolean>(false);
 
-	const updateQuery = useThrottle(
-		() => {
+	let autocompleteTags = $state<AutocompleteTag[]>([]);
+	let highlightedTag = $state<AutocompleteTag | undefined>();
+
+	let { startFill, endFill } = $derived.by(() => {
+		if (query === "" || !highlightedTag || !isOpen) return {};
+
+		const name = highlightedTag.antecedent ?? highlightedTag.name;
+
+		const idx = name.indexOf(query);
+		if (idx === -1) return {};
+
+		return {
+			startFill: name.substring(0, idx),
+			endFill: name.substring(idx + query.length)
+		};
+	});
+
+	let startFillElement = $state<HTMLElement>();
+	const startFillSize = new ElementSize(() => startFillElement);
+
+	$effect(() => {
+		if (query == "") {
+			autocompleteTags = [];
+			highlightedTag = undefined;
+			isOpen = false;
+		} else {
+			startFill = "";
+			endFill = "";
+			void onUpdateQuery();
+		}
+	});
+
+	const onUpdateQuery = useThrottle(
+		async () => {
 			if (!query) {
 				autocompleteTags = [];
 				return;
 			}
 
-			autocompleteTag({
-				booru: gallery.booru,
-				tag: query,
-				limit: 10
-			}).then((result) => {
-				autocompleteTags = result.unwrapOr([]);
-			});
+			const prevQuery = query;
+
+			const tags = await autocompleteTagsForQuery(query).map((tags) =>
+				tags.length === 0 ? [{ name: query }] : tags.slice(0, 10)
+			);
+
+			if (query !== prevQuery) return;
+
+			autocompleteTags = tags.unwrapOr([]);
+			isOpen = true;
 		},
-		500 // ms
+		() => (shouldThrottleQuery(query) ? 250 : 0) // ms
 	);
 
 	function onKeyDown(event: KeyboardEvent) {
@@ -61,9 +98,13 @@
 <Combobox.Root
 	type="single"
 	name="tagSearchBar"
-	bind:value={query}
+	bind:open={isOpen}
 	onValueChange={(value: string) => {
-		addTag(value);
+		console.log(value, query);
+		addTag((value || autocompleteTags.at(0)?.name) ?? query);
+	}}
+	onOpenChange={(open: boolean) => {
+		if (!open) highlightedTag = undefined;
 	}}
 >
 	<Combobox.Input placeholder="Search" aria-label="Search">
@@ -88,22 +129,28 @@
 						</span>
 					</button>
 				{/each}
-				<input
-					class="w-full focus:outline-hidden"
-					type="text"
-					bind:value={
-						() => query,
-						(v: string) => {
-							query = v;
-							void updateQuery();
-						}
-					}
-					onkeydown={onKeyDown}
-					name="tagSearchInput"
-					id="search-tag-input"
-					placeholder={tags.size === 0 ? "Search" : undefined}
-					aria-label="Search"
-				/>
+				<div class="relative w-full">
+					<input
+						class="w-full focus:outline-hidden"
+						style:margin-left="{startFillSize.width}px"
+						type="text"
+						bind:value={query}
+						placeholder={tags.size === 0 ? "Search" : undefined}
+						onkeydown={onKeyDown}
+						name="tagSearchInput"
+						id="search-tag-input"
+						aria-label="Search"
+					/>
+					<div class="pointer-events-none absolute inset-0 -z-10 flex" aria-hidden="true">
+						<span class="rounded bg-gray-950 text-gray-500" bind:this={startFillElement}>
+							{startFill}
+						</span>
+						<span class="opacity-0">{query}</span>
+						<span class="rounded bg-gray-950 text-gray-500">
+							{endFill}
+						</span>
+					</div>
+				</div>
 			</div>
 		{/snippet}
 	</Combobox.Input>
@@ -112,14 +159,18 @@
 			<Combobox.Content
 				class="z-50 max-h-(--bits-combobox-content-available-height) w-(--bits-combobox-anchor-width) min-w-(--bits-combobox-anchor-width) border border-gray-800 bg-black p-4 outline-hidden select-none"
 				sideOffset={10}
+				escapeKeydownBehavior="ignore"
 			>
 				{#each autocompleteTags as tag (tag)}
 					<Combobox.Item
 						class="px-2 py-1 outline-hidden select-none data-highlighted:bg-gray-800"
 						value={tag.name}
+						onHighlight={() => (highlightedTag = tag)}
 					>
 						{tag.antecedent ? `${tag.antecedent} → ${tag.name}` : tag.name}
-						<span class="text-sm text-gray-400">{formatNumberCompact(tag.count)}</span>
+						{#if tag.count !== undefined}
+							<span class="text-sm text-gray-400">{formatNumberCompact(tag.count)}</span>
+						{/if}
 					</Combobox.Item>
 				{/each}
 			</Combobox.Content>
