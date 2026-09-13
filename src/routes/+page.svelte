@@ -24,9 +24,9 @@
 {#if gallery.isSlideshowOpen}
 	<Slideshow />
 {:else}
-	<section>
+	<section class="px-2">
 		<form
-			class="mx-auto w-200 pt-10 pb-12"
+			class="mx-auto max-w-200 px-2 pt-10 pb-12"
 			onsubmit={(event) => {
 				event.preventDefault();
 				void gallery.search([...tags]);

@@ -100,7 +100,6 @@
 	name="tagSearchBar"
 	bind:open={isOpen}
 	onValueChange={(value: string) => {
-		console.log(value, query);
 		addTag((value || autocompleteTags.at(0)?.name) ?? query);
 	}}
 	onOpenChange={(open: boolean) => {

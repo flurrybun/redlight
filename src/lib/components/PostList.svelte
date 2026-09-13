@@ -28,7 +28,10 @@
 	let windowBottom = $derived(scrollY + viewportHeight - top + WINDOW_BUFFER);
 
 	let width = $derived(containerSize.width);
-	let columns = $derived(Math.ceil(Math.max(width, 1) / MAX_COLUMN_WIDTH));
+	let maxColumnWidth = $derived(
+		containerSize.width > 0 ? Math.min(MAX_COLUMN_WIDTH, containerSize.width) : MAX_COLUMN_WIDTH
+	);
+	let columns = $derived(Math.ceil(Math.max(width, 1) / maxColumnWidth));
 	let columnWidth = $derived((width - (columns - 1) * COLUMN_GAP) / columns);
 
 	function getPostHeight(post: BooruPost) {
@@ -130,7 +133,7 @@
 <svelte:window bind:innerHeight={viewportHeight} bind:scrollY />
 
 <div
-	class="relative mx-auto w-full max-w-300"
+	class="relative mx-auto w-full max-w-400"
 	style:height="{contentHeight}px"
 	bind:this={containerElement}
 >

@@ -103,3 +103,52 @@ export function indexOfMin<T>(arr: T[]): number {
 
 	return minIndex;
 }
+
+/**
+ * Returns a copy of a section of an array, with the left/right indices
+ * clamped to the array's start/end.
+ *
+ * @param arr The array to process.
+ * @param left The beginning index of the specified portion of the array.
+ * @param right The end index of the specified portion of the array. This
+ * is exclusive of the element at the index 'end'.
+ */
+export function clampedSlice<T>(arr: T[], left: number, right: number): T[] {
+	const len = arr.length;
+	const start = Math.max(0, Math.min(len, left));
+	const end = Math.max(0, Math.min(len, right));
+
+	return arr.slice(start, end);
+}
+
+/**
+ * Returns an array of the items surrounding the index in the array,
+ * with out of bounds elements being undefined.
+ *
+ * @param arr The array to process.
+ * @param index The index used as the center point.
+ * @param count The number of items taken on both sides of the index.
+ */
+export function takeNear<T>(arr: T[], index: number, count: number): (T | undefined)[] {
+	const start = index - count;
+	const end = index + count;
+	const result: (T | undefined)[] = [];
+
+	for (let i = start; i <= end; i++) {
+		result.push(i >= 0 && i < arr.length ? arr[i] : undefined);
+	}
+
+	return result;
+}
+
+/**
+ * Returns an array of the items surrounding the index in the array,
+ * clamping the start/end indices to the array's start/end.
+ *
+ * @param arr The array to process.
+ * @param index The index used as the center point.
+ * @param count The number of items taken on both sides of the index.
+ */
+export function takeNearClamped<T>(arr: T[], index: number, count: number): T[] {
+	return clampedSlice(arr, index - count, index + count + 1);
+}
