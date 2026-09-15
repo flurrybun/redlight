@@ -6,6 +6,7 @@
 	import { ElementSize, useIntersectionObserver } from "runed";
 	import { onMount, tick } from "svelte";
 	import LoadingSpinner from "./LoadingSpinner.svelte";
+	import ProgressiveImage from "./ProgressiveImage.svelte";
 
 	let {
 		top
@@ -16,7 +17,8 @@
 	const MAX_COLUMN_WIDTH = 500;
 	const ROW_GAP = 8;
 	const COLUMN_GAP = 8;
-	const WINDOW_BUFFER = 50;
+	const WINDOW_BUFFER_VH = 100;
+	const POST_LOAD_BUFFER = 3000;
 
 	let containerElement = $state<HTMLElement>();
 	let loadSentinelElement = $state<HTMLElement>();
@@ -24,21 +26,19 @@
 
 	let viewportHeight = $state(0);
 	let scrollY = $state(0);
-	let windowTop = $derived(scrollY - top - WINDOW_BUFFER);
-	let windowBottom = $derived(scrollY + viewportHeight - top + WINDOW_BUFFER);
 
-	let width = $derived(containerSize.width);
+	let bufferHeight = $derived(WINDOW_BUFFER_VH * viewportHeight);
+	let windowTop = $derived(scrollY - top - bufferHeight);
+	let windowBottom = $derived(scrollY + viewportHeight - top + bufferHeight);
+
 	let maxColumnWidth = $derived(
 		containerSize.width > 0 ? Math.min(MAX_COLUMN_WIDTH, containerSize.width) : MAX_COLUMN_WIDTH
 	);
-	let columns = $derived(Math.ceil(Math.max(width, 1) / maxColumnWidth));
-	let columnWidth = $derived((width - (columns - 1) * COLUMN_GAP) / columns);
+	let columns = $derived(Math.ceil(Math.max(containerSize.width, 1) / maxColumnWidth));
+	let columnWidth = $derived((containerSize.width - (columns - 1) * COLUMN_GAP) / columns);
 
 	function getPostHeight(post: BooruPost) {
-		if (!post.preview) return columnWidth;
-
-		const { width, height } = post.preview;
-		return Math.min((height * columnWidth) / width, 1000);
+		return Math.min((post.height * columnWidth) / post.width, 1000);
 	}
 
 	// visibleItems is calculated separately for performance, since windowTop/Bottom
@@ -139,25 +139,34 @@
 >
 	{#each visibleItems as item (item.post.id)}
 		<button
-			class="absolute cursor-pointer rounded bg-cover bg-center"
+			class="absolute cursor-pointer rounded"
 			style:top="{item.top}px"
 			style:left="{item.left}px"
 			style:width="{columnWidth}px"
 			style:height="{item.height}px"
-			style:background-image="url('{item.post.preview?.url}')"
 			style:view-transition-name={item.index === gallery.slideshowIndex ? "post" : undefined}
 			onclick={() => {
 				gallery.openSlideshow(item.post);
 			}}
 		>
-			{#if item.post.mediaType === "video"}
-				<div class="absolute inset-0 place-self-center rounded-full bg-black/50 p-2">
-					<Play class="text-white" />
-				</div>
-			{/if}
+			<ProgressiveImage
+				url={item.post.previewUrl}
+				placeholderUrl={item.post.placeholderUrl}
+				class="rounded"
+			>
+				{#if item.post.mediaType === "video"}
+					<div class="absolute inset-0 place-self-center rounded-full bg-black/50 p-2">
+						<Play class="text-white" />
+					</div>
+				{/if}
+			</ProgressiveImage>
 		</button>
 	{/each}
-	<div class="absolute" style:top="{contentHeight - 1000}px" bind:this={loadSentinelElement}></div>
+	<div
+		class="absolute"
+		style:top="{contentHeight - POST_LOAD_BUFFER}px"
+		bind:this={loadSentinelElement}
+	></div>
 </div>
 
 {#if gallery.isLoading}

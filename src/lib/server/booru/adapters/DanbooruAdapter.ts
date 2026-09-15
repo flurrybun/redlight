@@ -1,5 +1,6 @@
 import { DANBOORU_API_KEY, DANBOORU_LOGIN } from "$env/static/private";
 import { getExtensionType } from "$lib/utils/media";
+import { isDefined } from "$lib/utils/types";
 import type { ResultAsync } from "neverthrow";
 import z from "zod";
 import BooruAdapter from "../BooruAdapter";
@@ -11,7 +12,6 @@ import type {
 	SearchResult,
 	TagCategory
 } from "../types";
-import { getPreviewAsset } from "../utils";
 
 export const DanbooruPostSchema = z.object({
 	id: z.number(),
@@ -189,25 +189,27 @@ export default class DanbooruAdapter extends BooruAdapter {
 	}
 
 	private normalizePosts(posts: DanbooruPost[]): BooruPost[] {
-		return posts.map((post) => this.normalizePost(post));
+		return posts.map((post) => this.normalizePost(post)).filter(isDefined);
 	}
 
-	private normalizePost(raw: DanbooruPost): BooruPost {
+	private normalizePost(raw: DanbooruPost): BooruPost | undefined {
 		const assets = (raw.media_asset.variants ?? []).toSorted((a, b) => b.width - a.width);
 
 		const fileAsset = assets.at(0);
+		if (!fileAsset) return undefined;
+
+		const { previewUrl, placeholderUrl } = this.getUrls(
+			assets.map(({ url, width, height }) => ({ url, width, height }))
+		);
 
 		return {
 			id: raw.id,
 			source: this.info.id,
-			file: fileAsset
-				? {
-						url: fileAsset.url,
-						width: fileAsset.width,
-						height: fileAsset.height
-					}
-				: undefined,
-			preview: getPreviewAsset(assets.map(({ url, width, height }) => ({ url, width, height }))),
+			url: fileAsset.url,
+			previewUrl,
+			placeholderUrl,
+			height: fileAsset.height,
+			width: fileAsset.width,
 			mediaType: getExtensionType(raw.media_asset.file_ext),
 			tags: raw.tag_string.split(" ").filter(Boolean),
 			rating: this.normalizeRating(raw.rating),

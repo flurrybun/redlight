@@ -4,8 +4,11 @@ import z from "zod";
 export interface BooruPost {
 	id: number;
 	source: string;
-	file?: BooruAsset;
-	preview?: BooruAsset;
+	url: string;
+	previewUrl: string;
+	placeholderUrl: string;
+	width: number;
+	height: number;
 	mediaType: "image" | "video";
 	tags: string[];
 	rating: "safe" | "questionable" | "explicit";

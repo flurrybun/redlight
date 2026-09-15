@@ -1,8 +1,16 @@
+import { getFileType } from "$lib/utils/media";
 import { fromZod } from "$lib/utils/zod";
 import { Result, ResultAsync, err, errAsync, ok, okAsync } from "neverthrow";
 import type z from "zod";
 import { BooruErrorFactory } from "./BooruErrorFactory";
-import type { BooruError, BooruInfo, BooruTag, SearchOptions, SearchResult } from "./types";
+import type {
+	BooruAsset,
+	BooruError,
+	BooruInfo,
+	BooruTag,
+	SearchOptions,
+	SearchResult
+} from "./types";
 
 export default abstract class BooruAdapter {
 	protected info: BooruInfo;
@@ -68,6 +76,41 @@ export default abstract class BooruAdapter {
 		result: ResultAsync<SearchResult, BooruError>
 	): ResultAsync<SearchResult, BooruError> {
 		return result.map((res) => this.#deduplicatePostTags(res));
+	}
+
+	protected getUrls(assets: BooruAsset[]) {
+		const images = assets.filter(
+			(asset) =>
+				asset.width > 0 &&
+				asset.height > 0 &&
+				asset.url !== "" &&
+				getFileType(asset.url) === "image"
+		);
+
+		let bestAbove: BooruAsset | undefined = undefined;
+		let bestBelow: BooruAsset | undefined = undefined;
+		let lowest: BooruAsset | undefined = undefined;
+
+		for (const image of images) {
+			if (image.width >= 500) {
+				if (!bestAbove || image.width < bestAbove.width) {
+					bestAbove = image;
+				}
+			} else {
+				if (!bestBelow || image.width > bestBelow.width) {
+					bestBelow = image;
+				}
+			}
+
+			if (!lowest || image.width < lowest.width) {
+				lowest = image;
+			}
+		}
+
+		return {
+			previewUrl: bestAbove?.url ?? bestBelow?.url ?? images[0].url,
+			placeholderUrl: lowest?.url ?? images[0].url
+		};
 	}
 
 	#checkRateLimit(res: Response): ResultAsync<Response, BooruError> {

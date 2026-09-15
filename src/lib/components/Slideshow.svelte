@@ -1,27 +1,32 @@
 <script lang="ts">
 	import { gallery } from "$lib/gallery.svelte";
 	import type { BooruPost } from "$lib/server/booru/types";
-	import { takeNear, takeNearClamped } from "$lib/utils/array";
+	import { takeNear } from "$lib/utils/array";
+	import { isPropertyDefined } from "$lib/utils/types";
 	import { ElementSize } from "runed";
-	import { SvelteMap } from "svelte/reactivity";
 	import LoadingSpinner from "./LoadingSpinner.svelte";
+	import ProgressiveImage from "./ProgressiveImage.svelte";
+
+	const NEAR_COUNT = 5;
 
 	let post = $derived(gallery.posts.at(gallery.slideshowIndex));
-	let nearPosts = $derived(takeNear(gallery.posts, gallery.slideshowIndex, 1));
-	let isOpening = $derived(gallery.slideshowState === "opening");
+	let nearPosts = $derived(
+		takeNear(gallery.posts, gallery.slideshowIndex, NEAR_COUNT)
+			.map((post, i) => ({ post, distance: NEAR_COUNT - i }))
+			.filter(isPropertyDefined("post"))
+	);
+	// let isOpening = $derived(gallery.slideshowState === "opening");
 
 	let touchElement = $state<HTMLElement>();
 	let containerElement = $state<HTMLElement>();
 	const containerSize = new ElementSize(() => containerElement);
 
 	function getPostSize(post: BooruPost) {
-		if (!post.file) return { width: 0, height: 0 };
-
 		const containerWidth = containerSize.width - 16;
 		const containerHeight = containerSize.height - 16;
 
 		const containerRatio = containerWidth / containerHeight;
-		const postRatio = post.file.width / post.file.height;
+		const postRatio = post.width / post.height;
 
 		if (postRatio > containerRatio) {
 			return {
@@ -36,39 +41,6 @@
 		}
 	}
 
-	const preloadCache = new SvelteMap<string, HTMLImageElement>();
-	const PRELOAD_COUNT = 5;
-
-	function getBackgroundImageForPost(post: BooruPost) {
-		const fileUrl = post.file?.url;
-		const previewUrl = post.preview?.url;
-
-		const showFile = !isOpening && fileUrl && preloadCache.has(fileUrl);
-
-		if (showFile) return `url('${fileUrl}')`;
-		if (previewUrl) return `url('${previewUrl}')`;
-		return undefined;
-	}
-
-	$effect(() => {
-		if (isOpening) return;
-
-		const upcomingPosts = takeNearClamped(gallery.posts, gallery.slideshowIndex, PRELOAD_COUNT);
-
-		upcomingPosts.forEach((post) => {
-			if (!post.file || post.mediaType !== "image" || preloadCache.has(post.file.url)) return;
-
-			const img = new Image();
-
-			img.onload = () => {
-				if (!post.file) return;
-				preloadCache.set(post.file.url, img);
-			};
-
-			img.src = post.file.url;
-		});
-	});
-
 	async function next() {
 		const nextIndex = gallery.slideshowIndex + 1;
 		if (isTransitioning || (nextIndex >= gallery.posts.length && !gallery.hasMore)) return;
@@ -78,7 +50,7 @@
 		gallery.slideshowIndex = nextIndex;
 		const postsRemaining = gallery.posts.length - nextIndex;
 
-		if (postsRemaining <= PRELOAD_COUNT) {
+		if (postsRemaining <= NEAR_COUNT) {
 			await gallery.fetchNextPage();
 		}
 	}
@@ -205,23 +177,25 @@
 			style:transition={isTransitioning ? "transform 300ms ease-in-out" : undefined}
 			bind:this={containerElement}
 		>
-			{#each nearPosts as post, i (post?.id ?? `null-${String(i)}`)}
-				{#if post !== undefined}
-					{@const { width, height } = getPostSize(post)}
-					<div
-						class="absolute rounded-lg bg-cover"
-						style:background-image={getBackgroundImageForPost(post)}
-						style:width="{width}px"
-						style:height="{height}px"
-						style:transform="translateX({(gallery.slideshowIndex + i - 1) * containerSize.width}px)"
-						style:view-transition-name={i === 1 ? "post" : undefined}
-					>
-						{#if post.mediaType === "video"}
-							<!-- svelte-ignore a11y_media_has_caption -->
-							<video class="h-full w-full" src={post.file?.url} loop playsinline controls></video>
-						{/if}
-					</div>
-				{/if}
+			{#each nearPosts as { post, distance } (post.id)}
+				{@const { width, height } = getPostSize(post)}
+				{@const translateX = (gallery.slideshowIndex + distance) * containerSize.width}
+				<div
+					class="absolute"
+					style:width="{width}px"
+					style:height="{height}px"
+					style:transform="translateX({translateX}px)"
+					style:view-transition-name={distance === 0 ? "post" : undefined}
+				>
+					{#if post.mediaType === "image"}
+						<ProgressiveImage url={post.url} placeholderUrl={post.placeholderUrl} class="rounded-lg"
+						></ProgressiveImage>
+					{:else}
+						<!-- svelte-ignore a11y_media_has_caption -->
+						<video class="h-full w-full rounded-lg" src={post.url} loop playsinline controls
+						></video>
+					{/if}
+				</div>
 			{/each}
 		</div>
 	</div>

@@ -45,13 +45,13 @@ class Gallery {
 			booru: this.booru,
 			tags: this.#tags,
 			page: this.#currentPage,
-			limit: 20
+			limit: 100
 		});
 
 		await result.match(
 			async (data) => {
 				this.posts = uniqBy([...this.posts, ...data.posts], (post) => post.id);
-				this.hasMore = data.posts.length === 20;
+				this.hasMore = data.posts.length > 0;
 				this.#currentPage += 1;
 				this.isLoading = false;
 

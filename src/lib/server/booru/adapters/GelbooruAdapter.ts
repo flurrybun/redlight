@@ -11,7 +11,7 @@ import type {
 	SearchResult,
 	TagCategory
 } from "../types";
-import { getPreviewAsset, isValidTagCategory } from "../utils";
+import { isValidTagCategory } from "../utils";
 
 export const GelbooruPostSchema = z.object({
 	id: z.number(),
@@ -181,31 +181,32 @@ export default class GelbooruAdapter extends BooruAdapter {
 	}
 
 	private normalizePost(raw: GelbooruPost): BooruPost {
-		return {
-			id: raw.id,
-			source: this.info.id,
-			file: {
-				url: this.proxyUrl(raw.file_url),
+		const { previewUrl, placeholderUrl } = this.getUrls([
+			{
+				url: raw.file_url,
 				width: raw.width,
 				height: raw.height
 			},
-			preview: getPreviewAsset([
-				{
-					url: this.proxyUrl(raw.file_url),
-					width: raw.width,
-					height: raw.height
-				},
-				{
-					url: this.proxyUrl(raw.sample_url),
-					width: raw.sample_width,
-					height: raw.sample_height
-				},
-				{
-					url: this.proxyUrl(raw.preview_url),
-					width: raw.preview_width,
-					height: raw.preview_height
-				}
-			]),
+			{
+				url: raw.sample_url,
+				width: raw.sample_width,
+				height: raw.sample_height
+			},
+			{
+				url: raw.preview_url,
+				width: raw.preview_width,
+				height: raw.preview_height
+			}
+		]);
+
+		return {
+			id: raw.id,
+			source: this.info.id,
+			url: this.proxyUrl(raw.file_url),
+			previewUrl: this.proxyUrl(previewUrl),
+			placeholderUrl: this.proxyUrl(placeholderUrl),
+			width: raw.width,
+			height: raw.height,
 			mediaType: getFileType(raw.file_url),
 			tags: raw.tags.split(" ").filter(Boolean),
 			rating: this.normalizeRating(raw.rating),

@@ -1,5 +1,6 @@
 import { E621_API_KEY, E621_LOGIN } from "$env/static/private";
 import { getExtensionType } from "$lib/utils/media";
+import { isDefined } from "$lib/utils/types";
 import { okAsync, type ResultAsync } from "neverthrow";
 import z from "zod";
 import BooruAdapter from "../BooruAdapter";
@@ -12,7 +13,6 @@ import type {
 	SearchResult,
 	TagCategory
 } from "../types";
-import { getPreviewAsset } from "../utils";
 
 export const E621PostSchema = z.object({
 	id: z.number(),
@@ -188,21 +188,22 @@ export default class E621Adapter extends BooruAdapter {
 	}
 
 	private normalizePosts(posts: E621Post[]): BooruPost[] {
-		return posts.map((post) => this.normalizePost(post));
+		return posts.map((post) => this.normalizePost(post)).filter(isDefined);
 	}
 
-	private normalizePost(raw: E621Post): BooruPost {
+	private normalizePost(raw: E621Post): BooruPost | undefined {
+		if (!raw.file.url) return undefined;
+
+		const { previewUrl, placeholderUrl } = this.getUrls(this.getAssets(raw));
+
 		return {
 			id: raw.id,
 			source: this.info.id,
-			file: raw.file.url
-				? {
-						url: raw.file.url,
-						width: raw.file.width,
-						height: raw.file.height
-					}
-				: undefined,
-			preview: getPreviewAsset(this.getAssets(raw)),
+			url: raw.file.url,
+			previewUrl,
+			placeholderUrl,
+			width: raw.file.width,
+			height: raw.file.height,
 			mediaType: getExtensionType(raw.file.ext),
 			tags: [
 				...raw.tags.general,
