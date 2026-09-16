@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { gallery } from "$lib/gallery.svelte";
+	import { getGallery } from "$lib/context/gallery.svelte";
 	import type { BooruPost } from "$lib/server/booru/types";
 	import { indexOfMin } from "$lib/utils/array";
 	import Play from "@lucide/svelte/icons/play";
@@ -7,6 +7,8 @@
 	import { onMount, tick } from "svelte";
 	import LoadingSpinner from "./LoadingSpinner.svelte";
 	import ProgressiveImage from "./ProgressiveImage.svelte";
+
+	const gallery = getGallery();
 
 	let {
 		top

@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { formatNumberCompact } from "$lib/utils/intl";
-	import { Combobox } from "bits-ui";
-	import { ElementSize, useThrottle } from "runed";
-	import type { SvelteSet } from "svelte/reactivity";
 	import {
 		type AutocompleteTag,
 		autocompleteTagsForQuery,
 		shouldThrottleQuery
-	} from "./SearchBarState.svelte";
+	} from "$lib/booru/autocomplete";
+	import { formatNumberCompact } from "$lib/utils/intl";
+	import { Combobox } from "bits-ui";
+	import { ElementSize, useThrottle } from "runed";
+	import type { SvelteSet } from "svelte/reactivity";
 
 	let {
 		tags

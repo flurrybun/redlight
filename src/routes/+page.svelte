@@ -3,10 +3,12 @@
 	import PostList from "$lib/components/PostList.svelte";
 	import SearchBar from "$lib/components/SearchBar.svelte";
 	import Slideshow from "$lib/components/Slideshow.svelte";
-	import { gallery } from "$lib/gallery.svelte";
+	import { Gallery, setGallery } from "$lib/context/gallery.svelte";
 	import { ElementSize } from "runed";
 	import { onMount } from "svelte";
 	import { SvelteSet } from "svelte/reactivity";
+
+	const gallery = setGallery(new Gallery());
 
 	let header = $state<HTMLElement>();
 	const size = new ElementSize(() => header);

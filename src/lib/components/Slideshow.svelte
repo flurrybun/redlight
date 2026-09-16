@@ -1,11 +1,13 @@
 <script lang="ts">
-	import { gallery } from "$lib/gallery.svelte";
+	import { getGallery } from "$lib/context/gallery.svelte";
 	import type { BooruPost } from "$lib/server/booru/types";
 	import { takeNear } from "$lib/utils/array";
 	import { isPropertyDefined } from "$lib/utils/types";
 	import { ElementSize } from "runed";
 	import LoadingSpinner from "./LoadingSpinner.svelte";
 	import ProgressiveImage from "./ProgressiveImage.svelte";
+
+	const gallery = getGallery();
 
 	const NEAR_COUNT = 5;
 

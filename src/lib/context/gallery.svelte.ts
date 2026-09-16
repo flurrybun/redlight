@@ -1,14 +1,16 @@
+import { getTagMetadata, searchPosts } from "$lib/api/client";
+import type { BooruId } from "$lib/api/schemas";
+import type { ApiError } from "$lib/api/types";
 import type { BooruPost, BooruTag } from "$lib/server/booru/types";
-import { tick } from "svelte";
+import { chunk, uniqBy } from "$lib/utils/array";
+import { createContext, tick } from "svelte";
 import { SvelteMap, SvelteSet } from "svelte/reactivity";
-import { getTagMetadata, searchPosts } from "./api/client";
-import type { BooruId } from "./api/schemas";
-import type { ApiError } from "./api/types";
-import { chunk, uniqBy } from "./utils/array";
 
-const TAG_BATCH_SIZE = 250;
+export const [getGallery, setGallery] = createContext<Gallery>();
 
-class Gallery {
+export class Gallery {
+	readonly TAG_BATCH_SIZE = 250;
+
 	posts = $state<BooruPost[]>([]);
 	booru = $state<BooruId>("danbooru");
 	isLoading = $state(false);
@@ -112,13 +114,13 @@ class Gallery {
 			});
 		});
 
-		const batches = chunk([...missing], TAG_BATCH_SIZE);
+		const batches = chunk([...missing], this.TAG_BATCH_SIZE);
 
 		for (const batch of batches) {
 			const result = await getTagMetadata({
 				booru: this.booru,
 				names: batch,
-				limit: TAG_BATCH_SIZE
+				limit: this.TAG_BATCH_SIZE
 			});
 			if (result.isErr()) continue;
 
@@ -137,5 +139,3 @@ class Gallery {
 		});
 	}
 }
-
-export const gallery = new Gallery();

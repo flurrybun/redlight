@@ -1,6 +1,6 @@
 import { autocompleteTag } from "$lib/api/client";
 import { getMetadata } from "$lib/booru/metadata";
-import { gallery } from "$lib/gallery.svelte";
+import { getGallery } from "$lib/context/gallery.svelte";
 import type { TagCategory } from "$lib/server/booru/types";
 import { okAsync, ResultAsync } from "neverthrow";
 
@@ -15,6 +15,7 @@ export interface AutocompleteTag {
 }
 
 export function autocompleteTagsForQuery(query: string): ResultAsync<AutocompleteTag[], string> {
+	const gallery = getGallery();
 	const metadata = getMetadata(gallery.booru);
 
 	const endsWithDigit = /\d/.test(query.at(-1) ?? "");
@@ -63,6 +64,7 @@ export function autocompleteTagsForQuery(query: string): ResultAsync<Autocomplet
 }
 
 export function shouldThrottleQuery(query: string) {
+	const gallery = getGallery();
 	const metadata = getMetadata(gallery.booru);
 
 	const endsWithDigit = /\d/.test(query.at(-1) ?? "");
