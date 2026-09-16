@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { mergeProps } from "bits-ui";
 	import { useIntersectionObserver } from "runed";
+	import { onMount } from "svelte";
 	import type { HTMLAttributes } from "svelte/elements";
 
 	let {
@@ -29,9 +30,7 @@
 
 	const img = new Image();
 
-	$effect(() => {
-		isBlurred = true;
-		isLoaded = false;
+	onMount(() => {
 		img.src = url;
 
 		const startTime = performance.now();

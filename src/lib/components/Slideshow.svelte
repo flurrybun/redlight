@@ -14,7 +14,7 @@
 	let post = $derived(gallery.posts.at(gallery.slideshowIndex));
 	let nearPosts = $derived(
 		takeNear(gallery.posts, gallery.slideshowIndex, NEAR_COUNT)
-			.map((post, i) => ({ post, distance: NEAR_COUNT - i }))
+			.map((post, i) => ({ post, distance: i - NEAR_COUNT }))
 			.filter(isPropertyDefined("post"))
 	);
 	// let isOpening = $derived(gallery.slideshowState === "opening");
