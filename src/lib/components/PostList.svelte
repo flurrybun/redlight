@@ -29,7 +29,7 @@
 	let viewportHeight = $state(0);
 	let scrollY = $state(0);
 
-	let bufferHeight = $derived(WINDOW_BUFFER_VH * viewportHeight);
+	let bufferHeight = $derived((WINDOW_BUFFER_VH / 100) * viewportHeight);
 	let windowTop = $derived(scrollY - top - bufferHeight);
 	let windowBottom = $derived(scrollY + viewportHeight - top + bufferHeight);
 
