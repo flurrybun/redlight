@@ -1,12 +1,14 @@
 import type { BooruId } from "$lib/api/schemas";
 
-// order:score_asc vs sort:score:asc
 export type SortPrefix = "order" | "sort";
+export type ContentType = "posts" | "collections";
 
 export interface BaseBooruMetadata {
 	id: BooruId;
 	name: string;
 	url: string;
+
+	contentType: ContentType[];
 
 	sortPrefix: SortPrefix;
 	ascSortTypes: string[];
@@ -24,6 +26,7 @@ const gelbooruMetadata: BaseBooruMetadata = {
 	id: "gelbooru",
 	name: "Gelbooru",
 	url: "https://gelbooru.com/index.php",
+	contentType: ["posts"],
 	sortPrefix: "sort",
 	ascSortTypes: ["score", "id", "updated", "user", "source", "height", "width"],
 	nonAscSortTypes: ["random"],
@@ -34,6 +37,7 @@ const danbooruMetadata: BaseBooruMetadata = {
 	id: "danbooru",
 	name: "Danbooru",
 	url: "https://danbooru.donmai.us",
+	contentType: ["posts", "collections"],
 	sortPrefix: "order",
 	ascSortTypes: [
 		"score",
@@ -67,6 +71,7 @@ const e621Metadata: BaseBooruMetadata = {
 	id: "e621",
 	name: "e621",
 	url: "https://e621.net/",
+	contentType: ["posts", "collections"],
 	sortPrefix: "order",
 	ascSortTypes: [
 		"score",
@@ -115,15 +120,19 @@ function createMetadata(base: BaseBooruMetadata): BooruMetadata {
 	};
 }
 
-const registry = new Map<BooruId, BooruMetadata>([
-	["gelbooru", createMetadata(gelbooruMetadata)],
+const booruMetadataMap = new Map<BooruId, BooruMetadata>([
 	["danbooru", createMetadata(danbooruMetadata)],
+	["gelbooru", createMetadata(gelbooruMetadata)],
 	["e621", createMetadata(e621Metadata)]
 ]);
 
 export function getMetadata(id: BooruId): BooruMetadata {
-	const entry = registry.get(id);
+	const entry = booruMetadataMap.get(id);
 	if (!entry) throw new Error(`Unknown booru: "${id}"`);
 
 	return entry;
+}
+
+export function getAllMetadata(): BooruMetadata[] {
+	return [...booruMetadataMap.values()];
 }

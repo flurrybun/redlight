@@ -5,6 +5,8 @@
 		shouldThrottleQuery
 	} from "$lib/booru/autocomplete";
 	import { formatNumberCompact } from "$lib/utils/intl";
+	import Search from "@lucide/svelte/icons/search";
+	import X from "@lucide/svelte/icons/x";
 	import { Combobox } from "bits-ui";
 	import { ElementSize, useThrottle } from "runed";
 	import type { SvelteSet } from "svelte/reactivity";
@@ -35,6 +37,7 @@
 		};
 	});
 
+	let inputElement = $state<HTMLElement>();
 	let startFillElement = $state<HTMLElement>();
 	const startFillSize = new ElementSize(() => startFillElement);
 
@@ -108,31 +111,32 @@
 >
 	<Combobox.Input placeholder="Search" aria-label="Search">
 		{#snippet child({ props })}
-			<div
-				class="flex grow items-center gap-1 border border-gray-600 p-2 focus-within:border-gray-400"
-				{...props}
-			>
+			<div class="input-glass flex w-140 min-w-0 shrink items-center gap-1 edge-right" {...props}>
+				<Search class="mr-2" />
 				{#each tags as tagItem (tagItem)}
-					<button class="shrink-0 rounded bg-gray-800 px-1" type="button">
-						{tagItem}
-						<span
-							class="cursor-pointer"
-							role="button"
-							tabindex="-1"
-							onpointerdown={(event) => {
+					<div class="flex shrink-0 items-center gap-0.5 rounded bg-card-surface py-0.5 pr-1 pl-2">
+						<span class="text-nowrap">{tagItem}</span>
+						<button
+							class="rounded-sm p-0.5 transition-[background-color] duration-100 hover:bg-card-surface focus:outline-1 focus:outline-paper-dim"
+							aria-label="Remove {tagItem}"
+							onmousedown={(event) => {
 								event.preventDefault();
+							}}
+							onclick={() => {
+								inputElement?.focus();
 								removeTag(tagItem);
 							}}
 						>
-							&#215;
-						</span>
-					</button>
+							<X class="size-3" />
+						</button>
+					</div>
 				{/each}
 				<div class="relative w-full">
 					<input
 						class="w-full focus:outline-hidden"
 						style:margin-left="{startFillSize.width}px"
 						type="text"
+						bind:this={inputElement}
 						bind:value={query}
 						placeholder={tags.size === 0 ? "Search" : undefined}
 						onkeydown={onKeyDown}
@@ -156,20 +160,22 @@
 	{#if autocompleteTags.length > 0}
 		<Combobox.Portal>
 			<Combobox.Content
-				class="z-50 max-h-(--bits-combobox-content-available-height) w-(--bits-combobox-anchor-width) min-w-(--bits-combobox-anchor-width) border border-gray-800 bg-black p-4 outline-hidden select-none"
-				sideOffset={10}
+				class="card-glass popover-overlay z-50 max-h-(--bits-combobox-content-available-height) w-(--bits-combobox-anchor-width) min-w-(--bits-combobox-anchor-width) px-1 py-3 outline-hidden select-none"
+				sideOffset={4}
 				escapeKeydownBehavior="ignore"
 			>
 				{#each autocompleteTags as tag (tag)}
 					<Combobox.Item
-						class="px-2 py-1 outline-hidden select-none data-highlighted:bg-gray-800"
+						class="flex h-10 cursor-pointer items-center rounded-control pr-3 pl-4 outline-hidden select-none data-highlighted:bg-card-surface"
 						value={tag.name}
 						onHighlight={() => (highlightedTag = tag)}
 					>
-						{tag.antecedent ? `${tag.antecedent} → ${tag.name}` : tag.name}
-						{#if tag.count !== undefined}
-							<span class="text-sm text-gray-400">{formatNumberCompact(tag.count)}</span>
-						{/if}
+						<p>
+							{tag.antecedent ? `${tag.antecedent} → ${tag.name}` : tag.name}
+							{#if tag.count !== undefined}
+								<span class="text-sm text-gray-400">{formatNumberCompact(tag.count)}</span>
+							{/if}
+						</p>
 					</Combobox.Item>
 				{/each}
 			</Combobox.Content>

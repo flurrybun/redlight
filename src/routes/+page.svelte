@@ -1,21 +1,35 @@
 <script lang="ts">
+	import { getAllMetadata } from "$lib/booru/metadata";
+	import Button from "$lib/components/Button.svelte";
 	import ErrorCard from "$lib/components/ErrorCard.svelte";
 	import PostList from "$lib/components/PostList.svelte";
 	import SearchBar from "$lib/components/SearchBar.svelte";
+	import Select from "$lib/components/Select.svelte";
 	import Slideshow from "$lib/components/Slideshow.svelte";
 	import { Gallery, setGallery } from "$lib/context/gallery.svelte";
+	import Image from "@lucide/svelte/icons/image";
 	import { ElementSize } from "runed";
-	import { onMount } from "svelte";
 	import { SvelteSet } from "svelte/reactivity";
 
 	const gallery = setGallery(new Gallery());
 
 	let header = $state<HTMLElement>();
-	const size = new ElementSize(() => header);
+	const headerSize = new ElementSize(() => header);
 
 	let tags = new SvelteSet<string>();
+	let showPosts = $state(false);
 
-	onMount(() => gallery.search([...tags]));
+	function onSubmit(event: SubmitEvent) {
+		event.preventDefault();
+
+		showPosts = true;
+		void gallery.search([...tags]);
+	}
+
+	const selectBooruItems = getAllMetadata().map((booru) => ({
+		value: booru.id,
+		label: booru.name
+	}));
 </script>
 
 <svelte:head>
@@ -26,46 +40,43 @@
 {#if gallery.isSlideshowOpen}
 	<Slideshow />
 {:else}
-	<section class="px-2">
+	<section
+		class="relative flex flex-col items-center justify-center px-2 transition-transform duration-500 ease-out-quint"
+		style:transform={showPosts ? undefined : "translateY(calc(50dvh - 50%))"}
+	>
+		{#if !showPosts}
+			<h1 class="absolute -top-8 text-4xl font-bold tracking-tight text-dim">redlight</h1>
+		{/if}
+
 		<form
-			class="mx-auto max-w-200 px-2 pt-10 pb-12"
-			onsubmit={(event) => {
-				event.preventDefault();
-				void gallery.search([...tags]);
-			}}
+			class="my-16 flex flex-col items-center gap-2 px-2"
+			onsubmit={onSubmit}
 			bind:this={header}
 		>
-			<div class="flex items-center gap-2">
+			<div class="flex w-full justify-center gap-2">
 				<SearchBar {tags} />
-				<button class="bg-gray-800 px-2 py-1" type="submit">Search</button>
+				<Button variant="fluorescent" type="submit">Search</Button>
 			</div>
 
-			<fieldset>
-				<input
-					type="radio"
-					name="booru"
-					value="danbooru"
-					bind:group={gallery.booru}
-					id="danbooru"
+			<div class="flex w-full justify-start gap-2">
+				<Select
+					type="single"
+					value={gallery.booru}
+					items={selectBooruItems}
+					placeholder="Select a booru"
+					icon={Image}
 				/>
-				<label for="danbooru">Danbooru</label>
-				<input
-					type="radio"
-					name="booru"
-					value="gelbooru"
-					bind:group={gallery.booru}
-					id="gelbooru"
-				/>
-				<label for="gelbooru">Gelbooru</label>
-				<input type="radio" name="booru" value="e621" bind:group={gallery.booru} id="e621" />
-				<label for="e621">e621</label>
-			</fieldset>
+			</div>
 		</form>
-
-		{#if gallery.error}
-			<ErrorCard error={gallery.error} />
-		{:else}
-			<PostList top={size.height} />
-		{/if}
 	</section>
+
+	{#if showPosts}
+		<section class="px-2">
+			{#if gallery.error}
+				<ErrorCard error={gallery.error} />
+			{:else}
+				<PostList top={headerSize.height} />
+			{/if}
+		</section>
+	{/if}
 {/if}
