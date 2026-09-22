@@ -53,9 +53,9 @@
 			onsubmit={onSubmit}
 			bind:this={header}
 		>
-			<div class="flex w-full justify-center gap-2">
+			<div class="flex-start flex w-full justify-center gap-2">
 				<SearchBar {tags} />
-				<Button variant="fluorescent" type="submit">Search</Button>
+				<Button variant="fluorescent" class="h-input" type="submit">Search</Button>
 			</div>
 
 			<div class="flex w-full justify-start gap-2">

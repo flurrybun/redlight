@@ -111,47 +111,56 @@
 >
 	<Combobox.Input placeholder="Search" aria-label="Search">
 		{#snippet child({ props })}
-			<div class="input-glass flex w-140 min-w-0 shrink items-center gap-1 edge-right" {...props}>
-				<Search class="mr-2" />
-				{#each tags as tagItem (tagItem)}
-					<div class="flex shrink-0 items-center gap-0.5 rounded bg-card-surface py-0.5 pr-1 pl-2">
-						<span class="text-nowrap">{tagItem}</span>
-						<button
-							class="rounded-sm p-0.5 transition-[background-color] duration-100 hover:bg-card-surface focus:outline-1 focus:outline-paper-dim"
-							aria-label="Remove {tagItem}"
-							onmousedown={(event) => {
-								event.preventDefault();
-							}}
-							onclick={() => {
-								inputElement?.focus();
-								removeTag(tagItem);
-							}}
+			<div class="input-glass flex w-140 min-w-0 shrink items-start gap-2 edge-right" {...props}>
+				<div class="flex h-input items-center">
+					<Search />
+				</div>
+				<div class="flex w-full flex-wrap items-center gap-1 py-2.25">
+					{#each tags as tagItem (tagItem)}
+						<div
+							class="flex h-7.5 shrink-0 items-center gap-0.5 rounded bg-card-surface pr-1 pl-2 select-none"
 						>
-							<X class="size-3" />
-						</button>
-					</div>
-				{/each}
-				<div class="relative w-full">
-					<input
-						class="w-full focus:outline-hidden"
-						style:margin-left="{startFillSize.width}px"
-						type="text"
-						bind:this={inputElement}
-						bind:value={query}
-						placeholder={tags.size === 0 ? "Search" : undefined}
-						onkeydown={onKeyDown}
-						name="tagSearchInput"
-						id="search-tag-input"
-						aria-label="Search"
-					/>
-					<div class="pointer-events-none absolute inset-0 -z-10 flex" aria-hidden="true">
-						<span class="rounded bg-gray-950 text-gray-500" bind:this={startFillElement}>
-							{startFill}
-						</span>
-						<span class="opacity-0">{query}</span>
-						<span class="rounded bg-gray-950 text-gray-500">
-							{endFill}
-						</span>
+							<span class="text-nowrap">{tagItem}</span>
+							<button
+								class="rounded-sm p-0.5 transition-[background-color] duration-100 hover:bg-card-surface focus:outline-1 focus:outline-paper-dim"
+								aria-label="Remove {tagItem}"
+								onmousedown={(event) => {
+									event.preventDefault();
+								}}
+								onclick={() => {
+									inputElement?.focus();
+									removeTag(tagItem);
+								}}
+							>
+								<X class="size-3" />
+							</button>
+						</div>
+					{/each}
+					<div class="relative inline grow">
+						<input
+							class="w-[15ch] min-w-full focus:outline-hidden"
+							style:margin-left="{startFillSize.width}px"
+							type="text"
+							bind:this={inputElement}
+							bind:value={query}
+							placeholder={tags.size === 0 ? "Search" : undefined}
+							onkeydown={onKeyDown}
+							name="tagSearchInput"
+							id="search-tag-input"
+							aria-label="Search"
+						/>
+						<div
+							class="pointer-events-none absolute inset-0 -z-10 flex select-none"
+							aria-hidden="true"
+						>
+							<span class="rounded bg-gray-950 text-gray-500" bind:this={startFillElement}>
+								{startFill}
+							</span>
+							<span class="opacity-0">{query}</span>
+							<span class="rounded bg-gray-950 text-gray-500">
+								{endFill}
+							</span>
+						</div>
 					</div>
 				</div>
 			</div>

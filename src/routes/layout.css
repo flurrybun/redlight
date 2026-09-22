@@ -11,6 +11,8 @@
 	--radius-control: 6px;
 	--radius-surface: 10px;
 
+	--height-input: 3rem;
+
 	--animate-flicker: idle-flicker 0.1s linear infinite, sign-life 8s linear infinite;
 
 	--card-base: #111118;
@@ -70,6 +72,10 @@
 	button,
 	[role="button"] {
 		cursor: pointer;
+	}
+
+	input[type="text"] {
+		width: auto;
 	}
 
 	::selection {
@@ -244,7 +250,7 @@
 	}
 
 	.input-glass {
-		@apply relative h-12 rounded-control px-3;
+		@apply relative min-h-12 rounded-control px-3;
 		transition:
 			--anim-card-base 100ms ease,
 			--anim-card-border 100ms ease,
