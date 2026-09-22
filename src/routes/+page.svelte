@@ -49,11 +49,11 @@
 		{/if}
 
 		<form
-			class="my-16 flex flex-col items-center gap-2 px-2"
+			class="my-16 flex w-180 max-w-full flex-col items-center gap-2 px-2"
 			onsubmit={onSubmit}
 			bind:this={header}
 		>
-			<div class="flex-start flex w-full justify-center gap-2">
+			<div class="flex-start flex w-full gap-2">
 				<SearchBar {tags} />
 				<Button variant="fluorescent" class="h-input" type="submit">Search</Button>
 			</div>

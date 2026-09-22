@@ -113,7 +113,7 @@
 	<Combobox.Input>
 		{#snippet child({ props })}
 			<div
-				class="input-glass flex w-140 min-w-0 shrink cursor-text items-start gap-2 edge-right"
+				class="input-glass flex min-w-0 flex-1 cursor-text items-start gap-2 edge-right"
 				onmousedown={preventDefault}
 				onclick={() => {
 					inputElement?.focus();
@@ -123,14 +123,14 @@
 				<div class="flex h-input items-center">
 					<Search />
 				</div>
-				<div class="flex w-full flex-wrap items-center gap-1 py-2.25">
+				<div class="flex min-w-0 flex-1 flex-wrap items-center gap-1 py-2.25">
 					{#each tags as tagItem (tagItem)}
 						<div
-							class="flex h-7.5 shrink-0 items-center gap-0.5 rounded bg-card-surface pr-1 pl-2 select-none"
+							class="flex h-7.5 max-w-full min-w-0 shrink items-center gap-0.5 truncate rounded bg-card-surface pr-1 pl-2 select-none"
 						>
-							<span class="text-nowrap">{tagItem}</span>
+							<span class="min-w-0 shrink truncate">{tagItem}</span>
 							<button
-								class="rounded-sm p-0.5 transition-[background-color] duration-100 hover:bg-card-surface focus:outline-1 focus:outline-paper-dim"
+								class="shrink-0 rounded-sm p-0.5 transition-[background-color] duration-100 hover:bg-card-surface focus:outline-1 focus:outline-paper-dim"
 								aria-label="Remove {tagItem}"
 								onmousedown={preventDefault}
 								onclick={() => {
@@ -185,8 +185,10 @@
 						value={tag.name}
 						onHighlight={() => (highlightedTag = tag)}
 					>
-						<p>
-							{tag.antecedent ? `${tag.antecedent} → ${tag.name}` : tag.name}
+						<p class="flex w-full items-baseline gap-1">
+							<span class="truncate">
+								{tag.antecedent ? `${tag.antecedent} → ${tag.name}` : tag.name}
+							</span>
 							{#if tag.count !== undefined}
 								<span class="text-sm text-gray-400">{formatNumberCompact(tag.count)}</span>
 							{/if}
