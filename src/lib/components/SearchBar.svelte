@@ -4,6 +4,7 @@
 		autocompleteTagsForQuery,
 		shouldThrottleQuery
 	} from "$lib/booru/autocomplete";
+	import { preventDefault } from "$lib/utils/event";
 	import { formatNumberCompact } from "$lib/utils/intl";
 	import Search from "@lucide/svelte/icons/search";
 	import X from "@lucide/svelte/icons/x";
@@ -37,7 +38,7 @@
 		};
 	});
 
-	let inputElement = $state<HTMLElement>();
+	let inputElement = $state<HTMLInputElement>();
 	let startFillElement = $state<HTMLElement>();
 	const startFillSize = new ElementSize(() => startFillElement);
 
@@ -109,9 +110,16 @@
 		if (!open) highlightedTag = undefined;
 	}}
 >
-	<Combobox.Input placeholder="Search" aria-label="Search">
+	<Combobox.Input>
 		{#snippet child({ props })}
-			<div class="input-glass flex w-140 min-w-0 shrink items-start gap-2 edge-right" {...props}>
+			<div
+				class="input-glass flex w-140 min-w-0 shrink cursor-text items-start gap-2 edge-right"
+				onmousedown={preventDefault}
+				onclick={() => {
+					inputElement?.focus();
+				}}
+				{...props}
+			>
 				<div class="flex h-input items-center">
 					<Search />
 				</div>
@@ -124,9 +132,7 @@
 							<button
 								class="rounded-sm p-0.5 transition-[background-color] duration-100 hover:bg-card-surface focus:outline-1 focus:outline-paper-dim"
 								aria-label="Remove {tagItem}"
-								onmousedown={(event) => {
-									event.preventDefault();
-								}}
+								onmousedown={preventDefault}
 								onclick={() => {
 									inputElement?.focus();
 									removeTag(tagItem);
@@ -136,9 +142,9 @@
 							</button>
 						</div>
 					{/each}
-					<div class="relative inline grow">
+					<div class="relative inline max-w-full grow">
 						<input
-							class="w-[15ch] min-w-full focus:outline-hidden"
+							class="field-sizing-content max-w-full min-w-[6ch] not-focus:min-w-0"
 							style:margin-left="{startFillSize.width}px"
 							type="text"
 							bind:this={inputElement}

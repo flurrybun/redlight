@@ -78,6 +78,10 @@
 		width: auto;
 	}
 
+	input[type="text"]:focus {
+		outline: none;
+	}
+
 	::selection {
 		background: rgba(232, 26, 26, 0.3);
 		color: #ffe8e3;
