@@ -1,8 +1,7 @@
 import { autocompleteTag } from "$lib/api/client";
-import { getMetadata } from "$lib/booru/metadata";
-import { getGallery } from "$lib/context/gallery.svelte";
 import type { TagCategory } from "$lib/server/booru/types";
 import { okAsync, ResultAsync } from "neverthrow";
+import type { BooruMetadata } from "./metadata";
 
 /**
  * Similar to BooruTag, but category and count are nullable
@@ -14,10 +13,10 @@ export interface AutocompleteTag {
 	count?: number;
 }
 
-export function autocompleteTagsForQuery(query: string): ResultAsync<AutocompleteTag[], string> {
-	const gallery = getGallery();
-	const metadata = getMetadata(gallery.booru);
-
+export function autocompleteTagsForQuery(
+	query: string,
+	metadata: BooruMetadata
+): ResultAsync<AutocompleteTag[], string> {
 	const endsWithDigit = /\d/.test(query.at(-1) ?? "");
 	const numericType = !endsWithDigit
 		? metadata.ascSortTypes.find((sortType) => query.startsWith(`${sortType}:`))
@@ -55,7 +54,7 @@ export function autocompleteTagsForQuery(query: string): ResultAsync<Autocomplet
 	}
 
 	const tags = autocompleteTag({
-		booru: gallery.booru,
+		booru: metadata.id,
 		tag: query,
 		limit: 10
 	});
@@ -63,10 +62,7 @@ export function autocompleteTagsForQuery(query: string): ResultAsync<Autocomplet
 	return tags.mapErr((error) => error.message);
 }
 
-export function shouldThrottleQuery(query: string) {
-	const gallery = getGallery();
-	const metadata = getMetadata(gallery.booru);
-
+export function shouldThrottleQuery(query: string, metadata: BooruMetadata) {
 	const endsWithDigit = /\d/.test(query.at(-1) ?? "");
 	const numericType = !endsWithDigit
 		? metadata.ascSortTypes.find((sortType) => query.startsWith(`${sortType}:`))

@@ -4,32 +4,46 @@
 		autocompleteTagsForQuery,
 		shouldThrottleQuery
 	} from "$lib/booru/autocomplete";
+	import { getMetadata } from "$lib/booru/metadata";
+	import { getGallery } from "$lib/context/gallery.svelte";
 	import { preventDefault } from "$lib/utils/event";
 	import { formatNumberCompact } from "$lib/utils/intl";
+	import { popover } from "$lib/utils/transition";
 	import Search from "@lucide/svelte/icons/search";
 	import X from "@lucide/svelte/icons/x";
 	import { Combobox } from "bits-ui";
 	import { ElementSize, useThrottle } from "runed";
 	import type { SvelteSet } from "svelte/reactivity";
 
+	// please mind your feet
+
+	// bits ui's combobox was never meant to be used as a
+	// tag input with async results so it's a bit janky
+
 	let {
-		tags
+		tags,
+		onSubmit
 	}: {
 		tags: SvelteSet<string>;
+		onSubmit: () => void;
 	} = $props();
+
+	const gallery = getGallery();
+	let metadata = $derived(getMetadata(gallery.booru));
 
 	let query = $state("");
 	let isOpen = $state<boolean>(false);
 
+	let autocompleteQuery = $state("");
 	let autocompleteTags = $state<AutocompleteTag[]>([]);
 	let highlightedTag = $state<AutocompleteTag | undefined>();
 
 	let { startFill, endFill } = $derived.by(() => {
-		if (query === "" || !highlightedTag || !isOpen) return {};
+		if (query === "" || autocompleteQuery === "" || !highlightedTag || !isOpen) return {};
 
 		const name = highlightedTag.antecedent ?? highlightedTag.name;
 
-		const idx = name.indexOf(query);
+		const idx = name.indexOf(autocompleteQuery);
 		if (idx === -1) return {};
 
 		return {
@@ -43,36 +57,39 @@
 	const startFillSize = new ElementSize(() => startFillElement);
 
 	$effect(() => {
-		if (query == "") {
+		if (query === "") {
+			autocompleteQuery = "";
 			autocompleteTags = [];
 			highlightedTag = undefined;
 			isOpen = false;
 		} else {
-			startFill = "";
-			endFill = "";
 			void onUpdateQuery();
+		}
+	});
+
+	$effect(() => {
+		if (isOpen && autocompleteTags.length === 0) {
+			isOpen = false;
 		}
 	});
 
 	const onUpdateQuery = useThrottle(
 		async () => {
-			if (!query) {
-				autocompleteTags = [];
-				return;
-			}
+			const current = query;
+			if (!current) return;
 
-			const prevQuery = query;
-
-			const tags = await autocompleteTagsForQuery(query).map((tags) =>
-				tags.length === 0 ? [{ name: query }] : tags.slice(0, 10)
+			const tags = await autocompleteTagsForQuery(current, metadata).map((tags) =>
+				tags.length === 0 ? [{ name: current }] : tags.slice(0, 10)
 			);
 
-			if (query !== prevQuery) return;
+			if (!current) return;
+			console.log("post:", current);
 
+			autocompleteQuery = current;
 			autocompleteTags = tags.unwrapOr([]);
 			isOpen = true;
 		},
-		() => (shouldThrottleQuery(query) ? 250 : 0) // ms
+		() => (shouldThrottleQuery(query, metadata) ? 250 : 0) // ms
 	);
 
 	function onKeyDown(event: KeyboardEvent) {
@@ -84,6 +101,11 @@
 
 			removeTag(lastTag);
 			query = lastTag;
+		}
+
+		if (event.key === "Enter" && query === "") {
+			event.preventDefault();
+			onSubmit();
 		}
 	}
 
@@ -123,7 +145,7 @@
 				<div class="flex h-input items-center">
 					<Search />
 				</div>
-				<div class="flex min-w-0 flex-1 flex-wrap items-center gap-1 py-2.25">
+				<div class="flex h-full min-w-0 flex-1 flex-wrap items-center gap-1 py-2.25">
 					{#each tags as tagItem (tagItem)}
 						<div
 							class="flex h-7.5 max-w-full min-w-0 shrink items-center gap-0.5 truncate rounded bg-card-surface pr-1 pl-2 select-none"
@@ -142,7 +164,7 @@
 							</button>
 						</div>
 					{/each}
-					<div class="relative inline max-w-full grow">
+					<div class="relative z-10 inline max-w-full grow">
 						<input
 							class="field-sizing-content max-w-full min-w-[6ch] not-focus:min-w-0"
 							style:margin-left="{startFillSize.width}px"
@@ -159,11 +181,11 @@
 							class="pointer-events-none absolute inset-0 -z-10 flex select-none"
 							aria-hidden="true"
 						>
-							<span class="rounded bg-gray-950 text-gray-500" bind:this={startFillElement}>
+							<span class="rounded bg-card-surface/40 text-paper-dim" bind:this={startFillElement}>
 								{startFill}
 							</span>
 							<span class="opacity-0">{query}</span>
-							<span class="rounded bg-gray-950 text-gray-500">
+							<span class="rounded bg-card-surface/40 text-paper-dim">
 								{endFill}
 							</span>
 						</div>
@@ -172,30 +194,37 @@
 			</div>
 		{/snippet}
 	</Combobox.Input>
-	{#if autocompleteTags.length > 0}
-		<Combobox.Portal>
-			<Combobox.Content
-				class="card-glass popover-overlay z-50 max-h-(--bits-combobox-content-available-height) w-(--bits-combobox-anchor-width) min-w-(--bits-combobox-anchor-width) px-1 py-3 outline-hidden select-none"
-				sideOffset={4}
-				escapeKeydownBehavior="ignore"
-			>
-				{#each autocompleteTags as tag (tag)}
-					<Combobox.Item
-						class="flex h-10 cursor-pointer items-center rounded-control pr-3 pl-4 outline-hidden select-none data-highlighted:bg-card-surface"
-						value={tag.name}
-						onHighlight={() => (highlightedTag = tag)}
-					>
-						<p class="flex w-full items-baseline gap-1">
-							<span class="truncate">
-								{tag.antecedent ? `${tag.antecedent} → ${tag.name}` : tag.name}
-							</span>
-							{#if tag.count !== undefined}
-								<span class="text-sm text-gray-400">{formatNumberCompact(tag.count)}</span>
-							{/if}
-						</p>
-					</Combobox.Item>
-				{/each}
-			</Combobox.Content>
-		</Combobox.Portal>
-	{/if}
+	<Combobox.Portal>
+		<Combobox.Content
+			class="card-glass popover-overlay z-50 max-h-(--bits-combobox-content-available-height) w-(--bits-combobox-anchor-width) min-w-(--bits-combobox-anchor-width) px-1 py-3 outline-hidden select-none edge-top"
+			sideOffset={4}
+			escapeKeydownBehavior="ignore"
+			forceMount
+		>
+			{#snippet child({ wrapperProps, props, open })}
+				{#if open && autocompleteTags.length > 0}
+					<div {...wrapperProps}>
+						<div {...props} transition:popover>
+							{#each autocompleteTags as tag (tag)}
+								<Combobox.Item
+									class="flex h-10 cursor-pointer items-center rounded-control pr-3 pl-4 outline-hidden select-none data-highlighted:bg-card-surface"
+									value={tag.name}
+									onHighlight={() => (highlightedTag = tag)}
+								>
+									<p class="flex w-full items-baseline gap-1">
+										<span class="truncate">
+											{tag.antecedent ? `${tag.antecedent} → ${tag.name}` : tag.name}
+										</span>
+										{#if tag.count !== undefined}
+											<span class="text-sm text-icon">{formatNumberCompact(tag.count)}</span>
+										{/if}
+									</p>
+								</Combobox.Item>
+							{/each}
+						</div>
+					</div>
+				{/if}
+			{/snippet}
+		</Combobox.Content>
+	</Combobox.Portal>
 </Combobox.Root>
