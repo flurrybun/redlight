@@ -5,7 +5,7 @@
 	import { Cache } from "$lib/utils/cache";
 	import { preventDefault } from "$lib/utils/event";
 	import { formatNumberCompact } from "$lib/utils/intl";
-	import { popover } from "$lib/utils/transition";
+	import { popoverIn, popoverOut } from "$lib/utils/transition";
 	import Search from "@lucide/svelte/icons/search";
 	import X from "@lucide/svelte/icons/x";
 	import { Combobox } from "bits-ui";
@@ -212,8 +212,8 @@
 			{#snippet child({ wrapperProps, props, open })}
 				{#if open && query !== "" && autocompleteTags.length > 0}
 					<div {...wrapperProps}>
-						<div {...props} transition:popover>
-							{#each autocompleteTags as tag (tag)}
+						<div {...props} in:popoverIn out:popoverOut>
+							{#each autocompleteTags as tag, i (`${tag.name}-${String(i)}`)}
 								<Combobox.Item
 									class="flex h-10 cursor-pointer items-center rounded-control pr-3 pl-4 outline-hidden select-none data-highlighted:bg-card-surface"
 									value={tag.name}
