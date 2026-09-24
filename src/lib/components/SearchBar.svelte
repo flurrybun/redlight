@@ -1,18 +1,15 @@
 <script lang="ts">
-	import {
-		type AutocompleteTag,
-		autocompleteTagsForQuery,
-		shouldThrottleQuery
-	} from "$lib/booru/autocomplete";
+	import { type AutocompleteTag, autocompleteTagsForQuery } from "$lib/booru/autocomplete";
 	import { getMetadata } from "$lib/booru/metadata";
 	import { getGallery } from "$lib/context/gallery.svelte";
+	import { Cache } from "$lib/utils/cache";
 	import { preventDefault } from "$lib/utils/event";
 	import { formatNumberCompact } from "$lib/utils/intl";
 	import { popover } from "$lib/utils/transition";
 	import Search from "@lucide/svelte/icons/search";
 	import X from "@lucide/svelte/icons/x";
 	import { Combobox } from "bits-ui";
-	import { ElementSize, useThrottle } from "runed";
+	import { ElementSize, watch } from "runed";
 	import type { SvelteSet } from "svelte/reactivity";
 
 	// please mind your feet
@@ -30,6 +27,15 @@
 
 	const gallery = getGallery();
 	let metadata = $derived(getMetadata(gallery.booru));
+
+	let autocompleteCache = $state(new Cache<AutocompleteTag[]>({ limit: 100 }));
+
+	watch(
+		() => gallery.booru,
+		() => {
+			autocompleteCache.clear();
+		}
+	);
 
 	let query = $state("");
 	let isOpen = $state<boolean>(false);
@@ -56,15 +62,36 @@
 	let startFillElement = $state<HTMLElement>();
 	const startFillSize = new ElementSize(() => startFillElement);
 
+	let isFetchingAutocomplete = false;
+
 	$effect(() => {
-		if (query === "") {
+		if (!query) {
 			autocompleteQuery = "";
 			autocompleteTags = [];
 			highlightedTag = undefined;
 			isOpen = false;
-		} else {
-			void onUpdateQuery();
+
+			return;
 		}
+
+		if (isFetchingAutocomplete) return;
+
+		const current = query;
+		isFetchingAutocomplete = true;
+
+		void autocompleteCache
+			.getOr(current, async () =>
+				autocompleteTagsForQuery(current, metadata)
+					.map((tags) => (tags.length === 0 ? [{ name: current }] : tags.slice(0, 10)))
+					.unwrapOr([])
+			)
+			.then((tags) => {
+				isFetchingAutocomplete = false;
+
+				autocompleteQuery = current;
+				autocompleteTags = tags;
+				isOpen = true;
+			});
 	});
 
 	$effect(() => {
@@ -72,25 +99,6 @@
 			isOpen = false;
 		}
 	});
-
-	const onUpdateQuery = useThrottle(
-		async () => {
-			const current = query;
-			if (!current) return;
-
-			const tags = await autocompleteTagsForQuery(current, metadata).map((tags) =>
-				tags.length === 0 ? [{ name: current }] : tags.slice(0, 10)
-			);
-
-			if (!current) return;
-			console.log("post:", current);
-
-			autocompleteQuery = current;
-			autocompleteTags = tags.unwrapOr([]);
-			isOpen = true;
-		},
-		() => (shouldThrottleQuery(query, metadata) ? 250 : 0) // ms
-	);
 
 	function onKeyDown(event: KeyboardEvent) {
 		if (event.key === "Backspace" && query === "" && tags.size > 0) {
@@ -202,7 +210,7 @@
 			forceMount
 		>
 			{#snippet child({ wrapperProps, props, open })}
-				{#if open && autocompleteTags.length > 0}
+				{#if open && query !== "" && autocompleteTags.length > 0}
 					<div {...wrapperProps}>
 						<div {...props} transition:popover>
 							{#each autocompleteTags as tag (tag)}

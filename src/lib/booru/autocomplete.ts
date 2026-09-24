@@ -62,21 +62,6 @@ export function autocompleteTagsForQuery(
 	return tags.mapErr((error) => error.message);
 }
 
-export function shouldThrottleQuery(query: string, metadata: BooruMetadata) {
-	const endsWithDigit = /\d/.test(query.at(-1) ?? "");
-	const numericType = !endsWithDigit
-		? metadata.ascSortTypes.find((sortType) => query.startsWith(`${sortType}:`))
-		: undefined;
-
-	if (numericType !== undefined) return false;
-	if (query.startsWith("rating:")) return false;
-
-	const sortQuery = parseSortQuery(query);
-	if (sortQuery !== undefined) return false;
-
-	return true;
-}
-
 function parseSortQuery(query: string) {
 	if (query.startsWith("sort:")) return query.substring(5);
 	if (query.startsWith("order:")) return query.substring(6);
