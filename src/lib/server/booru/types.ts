@@ -1,4 +1,4 @@
-import type { BooruId } from "$lib/api/schemas";
+import type { BooruId } from "#lib/api/schemas.ts";
 import z from "zod";
 
 export interface BooruPost {

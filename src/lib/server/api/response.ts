@@ -1,5 +1,5 @@
-import type { ApiError } from "$lib/api/types";
-import type { BooruError } from "$lib/server/booru/types";
+import type { ApiError } from "#lib/api/types.ts";
+import type { BooruError } from "#lib/server/booru/types.ts";
 
 export function booruErrorToApiError(error: BooruError): ApiError {
 	const { name } = error.info;

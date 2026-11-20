@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { popoverIn, popoverOut } from "$lib/utils/transition";
+	import { popoverIn, popoverOut } from "#lib/utils/transition.ts";
 	import type { LucideProps } from "@lucide/svelte";
 	import Check from "@lucide/svelte/icons/check";
 	import ChevronDown from "@lucide/svelte/icons/chevron-down";

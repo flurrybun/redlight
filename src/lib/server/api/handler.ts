@@ -1,8 +1,7 @@
-import type { ApiError } from "$lib/api/types";
-import type { BooruError } from "$lib/server/booru/types";
-import { fromZod } from "$lib/utils/zod";
+import type { ApiError } from "#lib/api/types.ts";
+import type { BooruError } from "#lib/server/booru/types.ts";
+import { fromZod } from "#lib/utils/zod.ts";
 import type { RequestHandler } from "@sveltejs/kit";
-import { json } from "@sveltejs/kit";
 import type { Result } from "neverthrow";
 import z from "zod";
 import { booruErrorToApiError } from "./response";
@@ -35,14 +34,14 @@ export function createRequestHandler<TSchema extends z.ZodType, TData>(
 	return async ({ url }) => {
 		const params = parseSearchParams(url.searchParams, schema);
 		if (params.isErr()) {
-			return json({ error: params.error });
+			return Response.json({ error: params.error });
 		}
 
 		const result = await callback(params.value);
 
 		return result.match(
-			(data) => json({ data }),
-			(error) => json({ error: isBooruError(error) ? booruErrorToApiError(error) : error })
+			(data) => Response.json({ data }),
+			(error) => Response.json({ error: isBooruError(error) ? booruErrorToApiError(error) : error })
 		);
 	};
 }

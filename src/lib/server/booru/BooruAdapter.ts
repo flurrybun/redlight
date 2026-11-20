@@ -1,5 +1,5 @@
-import { getFileType } from "$lib/utils/media";
-import { fromZod } from "$lib/utils/zod";
+import { getFileType } from "#lib/utils/media.ts";
+import { fromZod } from "#lib/utils/zod.ts";
 import { Result, ResultAsync, err, errAsync, ok, okAsync } from "neverthrow";
 import type z from "zod";
 import { BooruErrorFactory } from "./BooruErrorFactory";

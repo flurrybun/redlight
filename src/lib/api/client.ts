@@ -1,4 +1,4 @@
-import type { BooruTag, SearchResult } from "$lib/server/booru/types";
+import type { BooruTag, SearchResult } from "#lib/server/booru/types.ts";
 import { errAsync, ResultAsync } from "neverthrow";
 import z from "zod";
 import { AutocompleteParamsSchema, SearchParamsSchema, TagMetadataParamsSchema } from "./schemas";

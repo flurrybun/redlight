@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { getGallery } from "$lib/context/gallery.svelte";
-	import type { BooruPost } from "$lib/server/booru/types";
-	import { indexOfMin } from "$lib/utils/array";
+	import { getGallery } from "#lib/context/gallery.svelte.ts";
+	import type { BooruPost } from "#lib/server/booru/types.ts";
+	import { indexOfMin } from "#lib/utils/array.ts";
 	import Play from "@lucide/svelte/icons/play";
 	import { ElementSize, useIntersectionObserver } from "runed";
 	import { onMount, tick } from "svelte";

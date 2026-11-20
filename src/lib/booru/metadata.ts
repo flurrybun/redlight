@@ -1,4 +1,4 @@
-import type { BooruId } from "$lib/api/schemas";
+import type { BooruId } from "#lib/api/schemas.ts";
 
 export type SortPrefix = "order" | "sort";
 export type ContentType = "posts" | "collections";

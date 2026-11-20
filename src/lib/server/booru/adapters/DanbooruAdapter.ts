@@ -1,6 +1,6 @@
-import { DANBOORU_API_KEY, DANBOORU_LOGIN, DANBOORU_USER_ID } from "$env/static/private";
-import { getExtensionType } from "$lib/utils/media";
-import { isDefined } from "$lib/utils/types";
+import { DANBOORU_API_KEY, DANBOORU_LOGIN, DANBOORU_USER_ID } from "$app/env/private";
+import { getExtensionType } from "#lib/utils/media.ts";
+import { isDefined } from "#lib/utils/types.ts";
 import type { ResultAsync } from "neverthrow";
 import z from "zod";
 import BooruAdapter from "../BooruAdapter";

@@ -1,5 +1,5 @@
-import { GELBOORU_API_KEY, GELBOORU_USER_ID } from "$env/static/private";
-import { getFileType } from "$lib/utils/media";
+import { GELBOORU_API_KEY, GELBOORU_USER_ID } from "$app/env/private";
+import { getFileType } from "#lib/utils/media.ts";
 import { type ResultAsync } from "neverthrow";
 import z from "zod";
 import BooruAdapter from "../BooruAdapter";
@@ -182,11 +182,7 @@ export default class GelbooruAdapter extends BooruAdapter {
 
 	private normalizePost(raw: GelbooruPost): BooruPost {
 		const { previewUrl, placeholderUrl } = this.getUrls([
-			{
-				url: raw.file_url,
-				width: raw.width,
-				height: raw.height
-			},
+			{ url: raw.file_url, width: raw.width, height: raw.height },
 			{
 				url: raw.sample_url,
 				width: raw.sample_width,

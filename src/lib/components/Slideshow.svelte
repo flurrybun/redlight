@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { getGallery } from "$lib/context/gallery.svelte";
-	import type { BooruPost } from "$lib/server/booru/types";
-	import { takeNear } from "$lib/utils/array";
-	import { isPropertyDefined } from "$lib/utils/types";
+	import { getGallery } from "#lib/context/gallery.svelte.ts";
+	import type { BooruPost } from "#lib/server/booru/types.ts";
+	import { takeNear } from "#lib/utils/array.ts";
+	import { isPropertyDefined } from "#lib/utils/types.ts";
 	import { ElementSize } from "runed";
 	import LoadingSpinner from "./LoadingSpinner.svelte";
 	import ProgressiveImage from "./ProgressiveImage.svelte";

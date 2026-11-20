@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ApiError } from "$lib/api/types";
+	import type { ApiError } from "#lib/api/types.ts";
 	import TriangleAlert from "@lucide/svelte/icons/triangle-alert";
 
 	let {

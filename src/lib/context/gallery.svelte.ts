@@ -1,8 +1,8 @@
-import { getTagMetadata, searchPosts } from "$lib/api/client";
-import type { BooruId } from "$lib/api/schemas";
-import type { ApiError } from "$lib/api/types";
-import type { BooruPost, BooruTag } from "$lib/server/booru/types";
-import { chunk, uniqBy } from "$lib/utils/array";
+import { getTagMetadata, searchPosts } from "#lib/api/client.ts";
+import type { BooruId } from "#lib/api/schemas.ts";
+import type { ApiError } from "#lib/api/types.ts";
+import type { BooruPost, BooruTag } from "#lib/server/booru/types.ts";
+import { chunk, uniqBy } from "#lib/utils/array.ts";
 import { createContext, tick } from "svelte";
 import { SvelteMap, SvelteSet } from "svelte/reactivity";
 

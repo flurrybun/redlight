@@ -1,5 +1,5 @@
-import { autocompleteTag } from "$lib/api/client";
-import type { TagCategory } from "$lib/server/booru/types";
+import { autocompleteTag } from "#lib/api/client.ts";
+import type { TagCategory } from "#lib/server/booru/types.ts";
 import { okAsync, ResultAsync } from "neverthrow";
 import type { BooruMetadata } from "./metadata";
 

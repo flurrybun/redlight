@@ -1,5 +1,5 @@
 <script lang="ts">
-	import favicon from "$lib/assets/favicon.svg";
+	import favicon from "#lib/assets/favicon.svg";
 	import { setLucideProps } from "@lucide/svelte";
 	import type { Snippet } from "svelte";
 	import "./layout.css";

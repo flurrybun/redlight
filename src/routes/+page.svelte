@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { getAllMetadata } from "$lib/booru/metadata";
-	import Button from "$lib/components/Button.svelte";
-	import ErrorCard from "$lib/components/ErrorCard.svelte";
-	import PostList from "$lib/components/PostList.svelte";
-	import SearchBar from "$lib/components/SearchBar.svelte";
-	import Select from "$lib/components/Select.svelte";
-	import Slideshow from "$lib/components/Slideshow.svelte";
-	import { Gallery, setGallery } from "$lib/context/gallery.svelte";
+	import { getAllMetadata } from "#lib/booru/metadata.ts";
+	import Button from "#lib/components/Button.svelte";
+	import ErrorCard from "#lib/components/ErrorCard.svelte";
+	import PostList from "#lib/components/PostList.svelte";
+	import SearchBar from "#lib/components/SearchBar.svelte";
+	import Select from "#lib/components/Select.svelte";
+	import Slideshow from "#lib/components/Slideshow.svelte";
+	import { Gallery, setGallery } from "#lib/context/gallery.svelte.ts";
 	import Image from "@lucide/svelte/icons/image";
 	import { ElementSize } from "runed";
 	import { MediaQuery, SvelteSet } from "svelte/reactivity";

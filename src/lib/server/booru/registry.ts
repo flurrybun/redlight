@@ -1,4 +1,4 @@
-import type { BooruId } from "$lib/api/schemas";
+import type { BooruId } from "#lib/api/schemas.ts";
 import DanbooruAdapter from "./adapters/DanbooruAdapter";
 import E621Adapter from "./adapters/E621Adapter";
 import GelbooruAdapter from "./adapters/GelbooruAdapter";

@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { type AutocompleteTag, autocompleteTagsForQuery } from "$lib/booru/autocomplete";
-	import { getMetadata } from "$lib/booru/metadata";
-	import { getGallery } from "$lib/context/gallery.svelte";
-	import { Cache } from "$lib/utils/cache";
-	import { preventDefault } from "$lib/utils/event";
-	import { formatNumberCompact } from "$lib/utils/intl";
-	import { popoverIn, popoverOut } from "$lib/utils/transition";
+	import { type AutocompleteTag, autocompleteTagsForQuery } from "#lib/booru/autocomplete.ts";
+	import { getMetadata } from "#lib/booru/metadata.ts";
+	import { getGallery } from "#lib/context/gallery.svelte.ts";
+	import { Cache } from "#lib/utils/cache.ts";
+	import { preventDefault } from "#lib/utils/event.ts";
+	import { formatNumberCompact } from "#lib/utils/intl.ts";
+	import { popoverIn, popoverOut } from "#lib/utils/transition.ts";
 	import ArrowLeft from "@lucide/svelte/icons/arrow-left";
 	import Search from "@lucide/svelte/icons/search";
 	import X from "@lucide/svelte/icons/x";

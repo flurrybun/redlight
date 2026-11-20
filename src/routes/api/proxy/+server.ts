@@ -1,4 +1,4 @@
-import { parseSearchParams } from "$lib/server/api/handler";
+import { parseSearchParams } from "#lib/server/api/handler.ts";
 import { error } from "@sveltejs/kit";
 import z from "zod";
 import type { RequestHandler } from "./$types";

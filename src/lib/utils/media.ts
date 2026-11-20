@@ -1,4 +1,4 @@
-import type { BooruPost } from "$lib/server/booru/types";
+import type { BooruPost } from "#lib/server/booru/types.ts";
 
 const videoExtensions = [
 	"mp4",
