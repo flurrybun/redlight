@@ -128,7 +128,7 @@
 				<div class="flex w-full justify-start gap-2">
 					<Select
 						type="single"
-						value={gallery.booru}
+						bind:value={gallery.booru}
 						items={selectBooruItems}
 						placeholder="Select a booru"
 						icon={Image}
