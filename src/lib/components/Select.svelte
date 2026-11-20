@@ -20,7 +20,7 @@
 		icon?: Component<LucideProps>;
 	} & WithoutChildren<Select.RootProps> = $props();
 
-	let rootElement = $state<HTMLElement | null>(null);
+	let triggerElement = $state<HTMLElement | null>(null);
 
 	const contentProps = $derived(
 		mergeProps(restContentProps, {
@@ -32,14 +32,14 @@
 	);
 
 	function onOpenChange(isOpen: boolean) {
-		if (!isOpen) rootElement?.blur();
+		if (!isOpen) triggerElement?.blur();
 	}
 </script>
 
 <Select.Root bind:value={value as never} {items} {onOpenChange} {...rootProps}>
 	<Select.Trigger
-		bind:ref={rootElement}
 		class="input-glass inline-flex w-48 touch-none items-center select-none"
+		bind:ref={triggerElement}
 	>
 		<Icon class="mr-2" />
 		<Select.Value {placeholder}>

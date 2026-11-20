@@ -6,6 +6,7 @@
 	import { preventDefault } from "$lib/utils/event";
 	import { formatNumberCompact } from "$lib/utils/intl";
 	import { popoverIn, popoverOut } from "$lib/utils/transition";
+	import ArrowLeft from "@lucide/svelte/icons/arrow-left";
 	import Search from "@lucide/svelte/icons/search";
 	import X from "@lucide/svelte/icons/x";
 	import { Combobox } from "bits-ui";
@@ -19,10 +20,18 @@
 
 	let {
 		tags,
-		onSubmit
+		onSubmit,
+		onFocusIn,
+		onBack,
+		showSubmit = false,
+		query = $bindable("")
 	}: {
 		tags: SvelteSet<string>;
 		onSubmit: () => void;
+		onFocusIn?: () => void;
+		onBack?: () => void;
+		showSubmit?: boolean;
+		query?: string;
 	} = $props();
 
 	const gallery = getGallery();
@@ -37,7 +46,6 @@
 		}
 	);
 
-	let query = $state("");
 	let isOpen = $state<boolean>(false);
 
 	let autocompleteQuery = $state("");
@@ -61,6 +69,22 @@
 	let inputElement = $state<HTMLInputElement>();
 	let startFillElement = $state<HTMLElement>();
 	const startFillSize = new ElementSize(() => startFillElement);
+
+	export function focus() {
+		inputElement?.focus();
+	}
+
+	export function blur() {
+		inputElement?.blur();
+	}
+
+	export function commit() {
+		const value = query.trim();
+		if (value === "") return;
+
+		addTag(value);
+		query = "";
+	}
 
 	let isFetchingAutocomplete = false;
 
@@ -149,9 +173,25 @@
 					inputElement?.focus();
 				}}
 				{...props}
+				onfocusin={onFocusIn}
 			>
 				<div class="flex h-input items-center">
-					<Search />
+					{#if onBack}
+						<button
+							type="button"
+							class="-ml-1 flex size-8 items-center justify-center rounded-control transition-[background-color] duration-100 hover:bg-card-surface focus:outline-1 focus:outline-paper-dim"
+							aria-label="Close search"
+							onmousedown={preventDefault}
+							onclick={(event) => {
+								event.stopPropagation();
+								onBack();
+							}}
+						>
+							<ArrowLeft />
+						</button>
+					{:else}
+						<Search />
+					{/if}
 				</div>
 				<div class="flex h-full min-w-0 flex-1 flex-wrap items-center gap-1 py-2.25">
 					{#each tags as tagItem (tagItem)}
@@ -184,6 +224,11 @@
 							name="tagSearchInput"
 							id="search-tag-input"
 							aria-label="Search"
+							enterkeyhint="search"
+							inputmode="search"
+							autocapitalize="off"
+							autocorrect="off"
+							spellcheck="false"
 						/>
 						<div
 							class="pointer-events-none absolute inset-0 -z-10 flex select-none"
@@ -199,12 +244,27 @@
 						</div>
 					</div>
 				</div>
+				{#if showSubmit}
+					<div class="flex h-input items-center">
+						<button
+							type="submit"
+							class="-mr-1 flex size-8 items-center justify-center rounded-control transition-[background-color] duration-100 hover:bg-card-surface focus:outline-1 focus:outline-paper-dim"
+							aria-label="Search"
+							onmousedown={preventDefault}
+							onclick={(event) => {
+								event.stopPropagation();
+							}}
+						>
+							<Search />
+						</button>
+					</div>
+				{/if}
 			</div>
 		{/snippet}
 	</Combobox.Input>
 	<Combobox.Portal>
 		<Combobox.Content
-			class="card-glass popover-overlay z-50 max-h-(--bits-combobox-content-available-height) w-(--bits-combobox-anchor-width) min-w-(--bits-combobox-anchor-width) px-1 py-3 outline-hidden select-none edge-top"
+			class="card-glass popover-overlay z-50 max-h-(--bits-combobox-content-available-height) w-(--bits-combobox-anchor-width) min-w-(--bits-combobox-anchor-width) overflow-y-auto overscroll-contain px-1 py-3 outline-hidden select-none edge-top"
 			sideOffset={4}
 			escapeKeydownBehavior="ignore"
 			forceMount
