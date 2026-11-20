@@ -1,4 +1,4 @@
-import { DANBOORU_API_KEY, DANBOORU_LOGIN } from "$env/static/private";
+import { DANBOORU_API_KEY, DANBOORU_LOGIN, DANBOORU_USER_ID } from "$env/static/private";
 import { getExtensionType } from "$lib/utils/media";
 import { isDefined } from "$lib/utils/types";
 import type { ResultAsync } from "neverthrow";
@@ -186,6 +186,12 @@ export default class DanbooruAdapter extends BooruAdapter {
 					count: ac.tag.post_count
 				}))
 			);
+	}
+
+	protected formatUserAgent(): string {
+		// https://danbooru.donmai.us/forum_topics/37341
+
+		return `Redlight/1.0; user #${DANBOORU_USER_ID} (by flurrybun on GitHub)`;
 	}
 
 	private normalizePosts(posts: DanbooruPost[]): BooruPost[] {

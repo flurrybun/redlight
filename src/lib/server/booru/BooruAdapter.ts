@@ -36,7 +36,7 @@ export default abstract class BooruAdapter {
 			fetch(fullUrl, {
 				headers: {
 					Accept: "application/json",
-					"User-Agent": this.#formatUserAgent(),
+					"User-Agent": this.formatUserAgent(),
 					...this.info.baseHeaders
 				}
 			}),
@@ -113,6 +113,14 @@ export default abstract class BooruAdapter {
 		};
 	}
 
+	protected formatUserAgent(): string {
+		// some boorus are very particular about the user agent string, especially
+		// when using large providers like cloudflare. override if necessary
+
+		const username = this.info.username;
+		return `Redlight/1.0${username ? `; user ${username}` : ""} (by flurrybun on GitHub)`;
+	}
+
 	#checkRateLimit(res: Response): ResultAsync<Response, BooruError> {
 		if (res.status !== 429) return okAsync(res);
 
@@ -130,14 +138,5 @@ export default abstract class BooruAdapter {
 				tags: [...new Set(post.tags)]
 			}))
 		};
-	}
-
-	#formatUserAgent(): string {
-		// danbooru/e621 are very particular about the user agent string
-		// they'll throw a 403 if it doesn't match a specific format
-
-		return this.info.username
-			? `Redlight/1.0 (by ${this.info.username} on ${this.info.name}, flurrybun on GitHub)`
-			: "Redlight/1.0 (by flurrybun on GitHub)";
 	}
 }
