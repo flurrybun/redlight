@@ -18,68 +18,54 @@ export const E621PostSchema = z.object({
 	id: z.number(),
 	created_at: z.string(),
 	updated_at: z.string(),
-	file: z.object({
-		width: z.number(),
-		height: z.number(),
-		ext: z.string(),
-		size: z.number(),
-		md5: z.string(),
-		url: z.string().nullable() // jpg
+	files: z.object({
+		meta: z.object({
+			md5: z.string(),
+			ext: z.string(),
+			size: z.number(),
+			duration: z.number().nullable(),
+			has_sample: z.boolean()
+		}),
+		original: z.object({
+			width: z.number(),
+			height: z.number(),
+			url: z.string().nullable()
+		}),
+		preview: z.object({
+			width: z.number(),
+			height: z.number(),
+			jpg: z.string().nullable(),
+			webp: z.string().nullable()
+		}),
+		sample: z.object({
+			width: z.number(),
+			height: z.number(),
+			jpg: z.string().nullable(),
+			webp: z.string().nullable()
+		}),
+		video: z
+			.object({
+				original: z.object({
+					url: z.string().nullable()
+				})
+			})
+			.optional()
 	}),
-	preview: z.object({
-		width: z.number(),
-		height: z.number(),
-		url: z.string().nullable(), // jpg
-		alt: z.string().nullable() // webp
+	stats: z.object({
+		score: z.object({
+			up: z.number(),
+			down: z.number(),
+			total: z.number()
+		}),
+		fav_count: z.number(),
+		hotness: z.number()
 	}),
-	sample: z.object({
-		has: z.boolean(),
-		width: z.number(),
-		height: z.number(),
-		url: z.string().nullable(), // jpg
-		alt: z.string().nullable() // webp
-	}),
-	score: z.object({
-		up: z.number(),
-		down: z.number(),
-		total: z.number()
-	}),
-	tags: z.object({
-		general: z.array(z.string()),
-		artist: z.array(z.string()),
-		contributor: z.array(z.string()),
-		copyright: z.array(z.string()),
-		character: z.array(z.string()),
-		species: z.array(z.string()),
-		invalid: z.array(z.string()),
-		meta: z.array(z.string()),
-		lore: z.array(z.string())
-	}),
-	locked_tags: z.array(z.string()),
-	change_seq: z.number(),
-	flags: z.object({
-		pending: z.boolean(),
-		flagged: z.boolean(),
-		note_locked: z.boolean(),
-		status_locked: z.boolean(),
-		rating_locked: z.boolean(),
-		deleted: z.boolean()
-	}),
-	rating: z.enum(["s", "q", "e"]),
-	sources: z.array(z.string()),
-	uploader_id: z.number(),
-	uploader_name: z.string(),
 	description: z.string(),
-	comment_count: z.number(),
-	is_favorited: z.boolean(),
-	vote: z.number(),
-	has_notes: z.boolean(),
-	duration: z.nullable(z.number())
+	tags: z.array(z.string()),
+	rating: z.enum(["s", "q", "e"])
 });
 
-export const E621PostResponseSchema = z.object({
-	posts: z.array(E621PostSchema)
-});
+export const E621PostResponseSchema = z.array(E621PostSchema);
 
 export const E621TagSchema = z.object({
 	id: z.number(),
@@ -144,7 +130,7 @@ export default class E621Adapter extends BooruAdapter {
 				.andThen((res) => this.parseJson(res))
 				.andThen((res) => this.validate(E621PostResponseSchema, res, { url }))
 				.map((res) => ({
-					posts: this.normalizePosts(res.posts),
+					posts: this.normalizePosts(res),
 					page: options.page
 				}))
 		);
@@ -192,32 +178,23 @@ export default class E621Adapter extends BooruAdapter {
 	}
 
 	private normalizePost(raw: E621Post): BooruPost | undefined {
-		if (!raw.file.url) return undefined;
+		const original = raw.files.original;
+		if (!original.url) return undefined;
 
 		const { previewUrl, placeholderUrl } = this.getUrls(this.getAssets(raw));
 
 		return {
 			id: raw.id,
 			source: this.info.id,
-			url: raw.file.url,
+			url: original.url,
 			previewUrl,
 			placeholderUrl,
-			width: raw.file.width,
-			height: raw.file.height,
-			mediaType: getExtensionType(raw.file.ext),
-			tags: [
-				...raw.tags.general,
-				...raw.tags.artist,
-				// ...raw.tags.contributor,
-				...raw.tags.copyright,
-				...raw.tags.character,
-				...raw.tags.species,
-				// ...raw.tags.invalid,
-				...raw.tags.meta,
-				...raw.tags.lore
-			],
+			width: original.width,
+			height: original.height,
+			mediaType: getExtensionType(raw.files.meta.ext),
+			tags: raw.tags,
 			rating: this.normalizeRating(raw.rating),
-			score: raw.score.total,
+			score: raw.stats.score.total,
 			createdAt: new Date(raw.created_at)
 		};
 	}
@@ -225,30 +202,31 @@ export default class E621Adapter extends BooruAdapter {
 	private getAssets(raw: E621Post): BooruAsset[] {
 		const assets: BooruAsset[] = [];
 
-		const previewUrl = raw.preview.alt ?? raw.preview.url;
-		const sampleUrl = raw.sample.alt ?? raw.sample.url;
+		const { original, preview, sample } = raw.files;
+		const previewUrl = preview.webp ?? preview.jpg;
+		const sampleUrl = sample.webp ?? sample.jpg;
 
-		if (raw.file.url) {
+		if (original.url) {
 			assets.push({
-				url: raw.file.url,
-				width: raw.file.width,
-				height: raw.file.height
+				url: original.url,
+				width: original.width,
+				height: original.height
 			});
 		}
 
 		if (previewUrl) {
 			assets.push({
 				url: previewUrl,
-				width: raw.preview.width,
-				height: raw.preview.height
+				width: preview.width,
+				height: preview.height
 			});
 		}
 
 		if (sampleUrl) {
 			assets.push({
 				url: sampleUrl,
-				width: raw.sample.width,
-				height: raw.sample.height
+				width: sample.width,
+				height: sample.height
 			});
 		}
 
