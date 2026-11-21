@@ -61,6 +61,7 @@ export interface BooruInfo {
 	username?: string;
 	baseParams?: Record<string, string>;
 	baseHeaders?: Record<string, string>;
+	useProxy?: boolean;
 }
 
 export type BooruErrorDetail =

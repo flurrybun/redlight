@@ -16,5 +16,7 @@ export const variables = defineEnvVars({
 	E621_API_KEY: { schema },
 	E621_LOGIN: { schema },
 	GELBOORU_API_KEY: { schema },
-	GELBOORU_USER_ID: { schema }
+	GELBOORU_USER_ID: { schema },
+	PROXY_URL: { schema },
+	PROXY_SECRET: { schema }
 });

@@ -125,7 +125,8 @@ export default class DanbooruAdapter extends BooruAdapter {
 			baseParams: {
 				login: DANBOORU_LOGIN,
 				api_key: DANBOORU_API_KEY
-			}
+			},
+			useProxy: true
 		});
 	}
 
