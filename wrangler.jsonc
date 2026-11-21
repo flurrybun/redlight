@@ -9,6 +9,12 @@
 	"previews": {},
 	"routes": [
 		{
+			"pattern": "redlight.bun.garden",
+			"custom_domain": true,
+			"enabled": true,
+			"previews_enabled": false
+		},
+		{
 			"pattern": "redlight-preview.bun.garden",
 			"custom_domain": true,
 			"enabled": false,
