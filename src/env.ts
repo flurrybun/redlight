@@ -1,11 +1,20 @@
 import { defineEnvVars } from "@sveltejs/kit/env";
+import { building } from "$app/env";
+
+function schema(value: string | undefined) {
+	if (value === undefined && !building) {
+		throw new Error("Missing required environment variable");
+	}
+
+	return value ?? "";
+}
 
 export const variables = defineEnvVars({
-	DANBOORU_API_KEY: { static: true },
-	DANBOORU_LOGIN: { static: true },
-	DANBOORU_USER_ID: { static: true },
-	E621_API_KEY: { static: true },
-	E621_LOGIN: { static: true },
-	GELBOORU_API_KEY: { static: true },
-	GELBOORU_USER_ID: { static: true }
+	DANBOORU_API_KEY: { schema },
+	DANBOORU_LOGIN: { schema },
+	DANBOORU_USER_ID: { schema },
+	E621_API_KEY: { schema },
+	E621_LOGIN: { schema },
+	GELBOORU_API_KEY: { schema },
+	GELBOORU_USER_ID: { schema }
 });
