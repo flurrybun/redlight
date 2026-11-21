@@ -5,5 +5,13 @@
 	"observability": {
 		"enabled": true
 	},
-	"previews": {}
+	"previews": {},
+	"routes": [
+		{
+			"pattern": "redlight-preview.bun.garden",
+			"custom_domain": true,
+			"enabled": false,
+			"previews_enabled": true
+		}
+	]
 }
