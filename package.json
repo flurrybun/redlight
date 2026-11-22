@@ -15,26 +15,32 @@
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"lint": "prettier --check . && eslint .",
+		"lint": "prettier --check . && eslint . --cache",
+		"lint:code": "eslint . --cache",
+		"verify": "concurrently --kill-others-on-fail --names check,lint \"pnpm check\" \"pnpm lint:code\"",
 		"format": "prettier --write ."
 	},
+	"lint-staged": {
+		"*": "prettier --write --ignore-unknown"
+	},
 	"simple-git-hooks": {
-		"pre-commit": "pnpm check && pnpm lint"
+		"pre-commit": "pnpm exec lint-staged && pnpm verify"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.1.1",
 		"@eslint/js": "^10.0.1",
 		"@sveltejs/adapter-cloudflare": "^9.0.0",
 		"@sveltejs/kit": "^3.4.0",
-		"@sveltejs/load-config": "^0.2.3",
 		"@sveltejs/vite-plugin-svelte": "^7.3.1",
 		"@tailwindcss/vite": "^4.3.5",
 		"@types/node": "^26.6.6",
 		"@typescript/native": "npm:typescript@^7.0.2",
+		"concurrently": "^10.0.7",
 		"eslint": "^10.15.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.24.1",
 		"globals": "^17.14.0",
+		"lint-staged": "^17.6.1",
 		"prettier": "^3.10.1",
 		"prettier-plugin-svelte": "^4.2.0",
 		"prettier-plugin-tailwindcss": "^0.8.1",

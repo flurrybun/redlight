@@ -6,9 +6,6 @@ import svelte from "eslint-plugin-svelte";
 import { defineConfig } from "eslint/config";
 import globals from "globals";
 import ts from "typescript-eslint";
-import { loadConfig } from "@sveltejs/load-config";
-
-const svelteConfig = (await loadConfig("./", { traverse: false }))?.config;
 
 const gitignorePath = path.resolve(import.meta.dirname, ".gitignore");
 
@@ -24,7 +21,7 @@ export default defineConfig(
 		languageOptions: { globals: { ...globals.browser, ...globals.node } },
 		rules: {
 			// typescript-eslint strongly recommend that you do not use the no-undef lint rule on TypeScript projects.
-			// see: https://typescript-eslint.io/troubleshooting/faqs/eslint/#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors
+			// see: https://typescript-eslint.io/troubleshooting/faqs/eslint/#i-get-errors-from-the-no-undef-rule-about-global-variables-being-not-defined-even-though-there-are-no-typescript-errors
 			"no-undef": "off"
 		}
 	},
@@ -35,7 +32,10 @@ export default defineConfig(
 				projectService: true,
 				extraFileExtensions: [".svelte"],
 				parser: ts.parser,
-				svelteConfig
+				svelteConfig: {
+					compilerOptions: { runes: true },
+					kit: { files: { routes: "src/routes" } }
+				}
 			}
 		}
 	},
