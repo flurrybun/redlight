@@ -102,7 +102,8 @@ export default class GelbooruAdapter extends BooruAdapter {
 			},
 			baseHeaders: {
 				Cookie: "fringeBenefits=yup"
-			}
+			},
+			useProxy: true
 		});
 	}
 

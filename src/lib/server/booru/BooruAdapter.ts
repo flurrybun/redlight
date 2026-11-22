@@ -1,5 +1,6 @@
 import { getFileType } from "#lib/utils/media.ts";
 import { fromZod } from "#lib/utils/zod.ts";
+import { PROXY_SECRET, PROXY_URL } from "$app/env/private";
 import { Result, ResultAsync, err, errAsync, ok, okAsync } from "neverthrow";
 import type z from "zod";
 import { BooruErrorFactory } from "./BooruErrorFactory";
@@ -30,18 +31,21 @@ export default abstract class BooruAdapter {
 		params: Record<string, string> = {}
 	): ResultAsync<Response, BooruError> {
 		const merged = { ...this.info.baseParams, ...params };
-		const fullUrl = `${url}?${new URLSearchParams(merged)}`;
+		let fullUrl = `${url}?${new URLSearchParams(merged)}`;
 
-		return ResultAsync.fromPromise(
-			fetch(fullUrl, {
-				headers: {
-					Accept: "application/json",
-					"User-Agent": this.formatUserAgent(),
-					...this.info.baseHeaders
-				}
-			}),
-			() => this.errors.network()
-		)
+		const headers = new Headers({
+			Accept: "application/json",
+			"User-Agent": this.formatUserAgent(),
+			...this.info.baseHeaders
+		});
+
+		if (this.info.useProxy) {
+			headers.set("x-proxy-secret", PROXY_SECRET);
+			headers.set("x-target-url", fullUrl);
+			fullUrl = PROXY_URL;
+		}
+
+		return ResultAsync.fromPromise(fetch(fullUrl, { headers }), () => this.errors.network())
 			.andThen((res) => this.#checkRateLimit(res))
 			.andThen((res) => {
 				if (res.ok) return okAsync(res);
