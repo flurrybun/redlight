@@ -17,19 +17,17 @@ export function autocompleteTagsForQuery(
 	query: string,
 	metadata: BooruMetadata
 ): ResultAsync<AutocompleteTag[], string> {
-	const endsWithDigit = /\d/.test(query.at(-1) ?? "");
-	const numericType = !endsWithDigit
-		? metadata.ascSortTypes.find((sortType) => query.startsWith(`${sortType}:`))
-		: undefined;
+	const numericType = metadata.ascSortTypes.find((sortType) => query.startsWith(`${sortType}:`));
 
 	if (numericType !== undefined) {
 		const numericQuery = query.slice(numericType.length + 1);
-		if (numericQuery.length > 2) return okAsync([]);
 
 		return okAsync(
 			["=", ">=", ">", "<=", "<"]
 				.filter((operator) => operator.startsWith(numericQuery))
-				.map((operator) => ({ name: `${numericType}:${operator}N` }))
+				.map((operator) => ({
+					name: `${numericType}:${operator}N`
+				}))
 		);
 	}
 
@@ -53,13 +51,26 @@ export function autocompleteTagsForQuery(
 		);
 	}
 
+	let tag = query;
+	if (tag.startsWith("-")) tag = tag.slice(1);
+
 	const tags = autocompleteTag({
 		booru: metadata.id,
-		tag: query,
+		tag,
 		limit: 10
 	});
 
-	return tags.mapErr((error) => error.message);
+	return tags
+		.map((tags) =>
+			query.startsWith("-")
+				? tags.map((tag) => ({
+						...tag,
+						antecedent: tag.antecedent ? `-${tag.antecedent}` : undefined,
+						name: `-${tag.name}`
+					}))
+				: tags
+		)
+		.mapErr((error) => error.message);
 }
 
 function parseSortQuery(query: string) {

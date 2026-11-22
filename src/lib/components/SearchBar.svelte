@@ -88,34 +88,40 @@
 
 	let isFetchingAutocomplete = false;
 
+	async function fetchAutocomplete() {
+		const current = query;
+
+		const tags = await autocompleteCache.getOr(current, async () =>
+			autocompleteTagsForQuery(current, metadata)
+				.map((tags) => (tags.length === 0 ? [{ name: current }] : tags.slice(0, 10)))
+				.unwrapOr([])
+		);
+
+		if (query === "") return;
+
+		autocompleteQuery = current;
+		autocompleteTags = tags;
+		isOpen = true;
+
+		if (query === current) return;
+		await fetchAutocomplete();
+	}
+
 	$effect(() => {
-		if (!query) {
+		if (query === "") {
 			autocompleteQuery = "";
 			autocompleteTags = [];
 			highlightedTag = undefined;
 			isOpen = false;
-
 			return;
 		}
 
 		if (isFetchingAutocomplete) return;
-
-		const current = query;
 		isFetchingAutocomplete = true;
 
-		void autocompleteCache
-			.getOr(current, async () =>
-				autocompleteTagsForQuery(current, metadata)
-					.map((tags) => (tags.length === 0 ? [{ name: current }] : tags.slice(0, 10)))
-					.unwrapOr([])
-			)
-			.then((tags) => {
-				isFetchingAutocomplete = false;
-
-				autocompleteQuery = current;
-				autocompleteTags = tags;
-				isOpen = true;
-			});
+		void fetchAutocomplete().then(() => {
+			isFetchingAutocomplete = false;
+		});
 	});
 
 	$effect(() => {
